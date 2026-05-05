@@ -137,8 +137,8 @@ function toggleDetails(id) {
         container.classList.add('collapsed');
         btn.classList.add('rotate-180');
     } else {
-        container.classList.remove('expanded');
-        container.classList.add('collapsed');
+        container.classList.remove('collapsed');
+        container.classList.add('expanded');
         btn.classList.remove('rotate-180');
     }
 }
