@@ -33,7 +33,7 @@ function agregarFila() {
         </td>
         <td class="p-2 text-center">
             <div class="flex items-center justify-center space-x-2">
-                <button onclick="toggleDetails(${rowId})" class="text-indigo-500 hover:text-indigo-700 p-1 transition-transform" id="btn-toggle-${rowId}">
+                <button onclick="toggleDetails(${rowId})" class="text-indigo-500 hover:text-indigo-700 p-1 transition-transform rotate-180" id="btn-toggle-${rowId}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
                 <button onclick="eliminarFila(${rowId})" class="text-gray-300 hover:text-red-500 p-1 transition-colors">
@@ -48,7 +48,7 @@ function agregarFila() {
     detailsRow.className = "bg-white";
     detailsRow.innerHTML = `
         <td colspan="7" class="p-0 border-b border-gray-100">
-            <div id="container-details-${rowId}" class="details-panel expanded px-4 py-3">
+            <div id="container-details-${rowId}" class="details-panel collapsed px-4 py-3">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-l-4 border-indigo-400 pl-4 py-1">
                     
                     <!-- Bloque 1: Costos Base e Impuestos de Factura -->
