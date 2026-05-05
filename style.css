@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.card {
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.details-panel {
+    transition: all 0.3s ease-out;
+    overflow: hidden;
+}
+
+.collapsed {
+    max-height: 0 !important;
+    opacity: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.expanded {
+    max-height: 800px;
+    opacity: 1;
+}
+
+.rotate-180 {
+    transform: rotate(180deg);
+}
