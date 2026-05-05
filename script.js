@@ -97,7 +97,7 @@ function agregarFila() {
                     <div class="text-[11px] space-y-1">
                         <span class="text-[9px] uppercase font-bold text-gray-400 block mb-1">Análisis de Venta Minorista</span>
                         <div class="flex justify-between">
-                            <span class="text-gray-500">Costo Reposición (Neto+Log+ILA):</span>
+                            <span class="text-gray-500">Valor Neto Compra (Neto+Log+ILA):</span>
                             <span id="det-costo-reposicion-${rowId}">$0</span>
                         </div>
                         <div class="flex justify-between">
