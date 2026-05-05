@@ -33,7 +33,7 @@ function agregarFila() {
         </td>
         <td class="p-2 text-center">
             <div class="flex items-center justify-center space-x-2">
-                <button onclick="toggleDetails(${rowId})" class="text-indigo-500 hover:text-indigo-700 p-1 transition-transform" id="btn-toggle-${rowId}">
+                <button onclick="toggleDetails(${rowId})" class="text-indigo-500 hover:text-indigo-700 p-1 transition-transform rotate-180" id="btn-toggle-${rowId}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
                 <button onclick="eliminarFila(${rowId})" class="text-gray-300 hover:text-red-500 p-1 transition-colors">
