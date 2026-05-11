@@ -1,4 +1,5 @@
 let rowCount = 0;
+let facturaEnEdicion = null; // Variable para rastrear si se está editando una factura
 
 function agregarFila() {
     const tbody = document.getElementById('cuerpoTabla');
@@ -186,13 +187,11 @@ function calcularTodo() {
 
         if (cant > 0) {
             const ilaCompraUnit = netoUnitario * tasaILA;
-            // El costo de reposición real incluye el ILA pagado ya que no se recupera
             const costoReposicionUnit = netoUnitario + logisticaUnitario + ilaCompraUnit;
 
             const ivaCompraUnit = (netoUnitario + logisticaUnitario) * 0.19;
             const desembolsoTotalFacturaUnit = netoUnitario + logisticaUnitario + ilaCompraUnit + ivaCompraUnit;
 
-            // Cálculo Venta: Basado en costo de reposición (que ya tiene el ILA)
             const factorMargen = margenDeseado >= 1 ? 0.01 : (1 - margenDeseado);
             const netoVentaSugerido = costoReposicionUnit / factorMargen;
             const ivaVentaUnit = netoVentaSugerido * 0.19;
@@ -202,23 +201,46 @@ function calcularTodo() {
             const gananciaNetaUnit = netoVentaSugerido - costoReposicionUnit;
 
             // Bloque 1
-            document.getElementById(`det-neto-base-${id}`).innerText = formatoDinero(netoUnitario);
-            document.getElementById(`det-flete-unit-${id}`).innerText = formatoDinero(logisticaUnitario);
-            document.getElementById(`det-ila-pago-${id}`).innerText = formatoDinero(ilaCompraUnit);
-            document.getElementById(`det-costo-iva-compra-${id}`).innerText = formatoDinero(ivaCompraUnit);
-            document.getElementById(`det-costo-final-${id}`).innerText = formatoDinero(desembolsoTotalFacturaUnit);
+            const detNetoBase = document.getElementById(`det-neto-base-${id}`);
+            if (detNetoBase) detNetoBase.innerText = formatoDinero(netoUnitario);
+
+            const detFleteUnit = document.getElementById(`det-flete-unit-${id}`);
+            if (detFleteUnit) detFleteUnit.innerText = formatoDinero(logisticaUnitario);
+
+            const detIlaPago = document.getElementById(`det-ila-pago-${id}`);
+            if (detIlaPago) detIlaPago.innerText = formatoDinero(ilaCompraUnit);
+
+            const detCostoIvaCompra = document.getElementById(`det-costo-iva-compra-${id}`);
+            if (detCostoIvaCompra) detCostoIvaCompra.innerText = formatoDinero(ivaCompraUnit);
+
+            const detCostoFinal = document.getElementById(`det-costo-final-${id}`);
+            if (detCostoFinal) detCostoFinal.innerText = formatoDinero(desembolsoTotalFacturaUnit);
 
             // Bloque 2
-            document.getElementById(`det-iva-compra-${id}`).innerText = formatoDinero(ivaCompraUnit);
-            document.getElementById(`det-iva-venta-${id}`).innerText = formatoDinero(ivaVentaUnit);
-            document.getElementById(`det-dif-iva-${id}`).innerText = formatoDinero(diferenciaIVA);
+            const detIvaCompra = document.getElementById(`det-iva-compra-${id}`);
+            if (detIvaCompra) detIvaCompra.innerText = formatoDinero(ivaCompraUnit);
+
+            const detIvaVenta = document.getElementById(`det-iva-venta-${id}`);
+            if (detIvaVenta) detIvaVenta.innerText = formatoDinero(ivaVentaUnit);
+
+            const detDifIva = document.getElementById(`det-dif-iva-${id}`);
+            if (detDifIva) detDifIva.innerText = formatoDinero(diferenciaIVA);
 
             // Bloque 3
-            document.getElementById(`det-costo-reposicion-${id}`).innerText = formatoDinero(costoReposicionUnit);
-            document.getElementById(`det-neto-venta-${id}`).innerText = formatoDinero(netoVentaSugerido);
-            document.getElementById(`det-iva-venta-val-${id}`).innerText = formatoDinero(ivaVentaUnit);
-            document.getElementById(`det-venta-sugerida-${id}`).innerText = formatoDinero(pvpFinal);
-            document.getElementById(`det-ganancia-${id}`).innerText = formatoDinero(gananciaNetaUnit);
+            const detCostoReposicion = document.getElementById(`det-costo-reposicion-${id}`);
+            if (detCostoReposicion) detCostoReposicion.innerText = formatoDinero(costoReposicionUnit);
+
+            const detNetoVenta = document.getElementById(`det-neto-venta-${id}`);
+            if (detNetoVenta) detNetoVenta.innerText = formatoDinero(netoVentaSugerido);
+
+            const detIvaVentaVal = document.getElementById(`det-iva-venta-val-${id}`);
+            if (detIvaVentaVal) detIvaVentaVal.innerText = formatoDinero(ivaVentaUnit);
+
+            const detVentaSugerida = document.getElementById(`det-venta-sugerida-${id}`);
+            if (detVentaSugerida) detVentaSugerida.innerText = formatoDinero(pvpFinal);
+
+            const detGanancia = document.getElementById(`det-ganancia-${id}`);
+            if (detGanancia) detGanancia.innerText = formatoDinero(gananciaNetaUnit);
         }
     });
 
@@ -236,12 +258,139 @@ function calcularTodo() {
 }
 
 function limpiar() {
-    if (confirm("¿Limpiar todos los datos?")) {
         document.getElementById('fleteTotal').value = 0;
         document.getElementById('otrosCargos').value = 0;
         document.getElementById('cuerpoTabla').innerHTML = "";
+        document.getElementById('nombreFactura').value = "";
         agregarFila();
+}
+
+function guardarFactura() {
+    const tbody = document.getElementById('cuerpoTabla');
+    const mainRows = tbody.querySelectorAll('tr[id^="fila-main-"]');
+
+    const factura = {
+        nombre: document.getElementById('nombreFactura').value || `Factura ${new Date().toLocaleString()}`,
+        fleteTotal: parseFloat(document.getElementById('fleteTotal').value) || 0,
+        otrosCargos: parseFloat(document.getElementById('otrosCargos').value) || 0,
+        productos: []
+    };
+
+    mainRows.forEach(row => {
+        const producto = {
+            nombre: row.querySelector('input[placeholder="Nombre..."]').value,
+            cantidad: parseFloat(row.querySelector('.cantidad').value) || 0,
+            netoTotal: parseFloat(row.querySelector('.neto-total').value) || 0,
+            ilaTipo: parseFloat(row.querySelector('.ila-tipo').value) || 0,
+            margen: parseFloat(row.querySelector('.margen-producto').value) || 0
+        };
+        factura.productos.push(producto);
+    });
+
+    const facturasGuardadas = JSON.parse(localStorage.getItem('facturas')) || [];
+
+    if (facturaEnEdicion !== null) {
+        // Sobrescribir la factura en edición
+        facturasGuardadas[facturaEnEdicion] = factura;
+        facturaEnEdicion = null; // Resetear el estado de edición
+        alert('Factura actualizada exitosamente.');
+    } else {
+        // Agregar una nueva factura
+        facturasGuardadas.push(factura);
+        alert('Factura guardada exitosamente.');
+    }
+
+    localStorage.setItem('facturas', JSON.stringify(facturasGuardadas));
+    cargarFacturas();
+
+    // Preguntar si desea limpiar después de guardar
+    if (confirm("¿Desea limpiar los datos después de guardar?")) {
+        limpiar();
     }
 }
 
-window.onload = agregarFila;
+function cargarFacturas() {
+    const listadoFacturas = document.getElementById('listadoFacturas');
+    listadoFacturas.innerHTML = '';
+
+    const facturasGuardadas = JSON.parse(localStorage.getItem('facturas')) || [];
+    facturasGuardadas.forEach((factura, index) => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between items-center p-2 bg-gray-50 rounded shadow-sm';
+        li.innerHTML = `
+            <span>${factura.nombre} - Productos: ${factura.productos.length}</span>
+            <div class="flex space-x-2">
+                <button onclick="editarFactura(${index})" class="text-indigo-600 hover:underline">Editar</button>
+                <button onclick="eliminarFactura(${index})" class="text-red-600 hover:underline">Eliminar</button>
+            </div>
+        `;
+        listadoFacturas.appendChild(li);
+    });
+}
+
+function eliminarFactura(index) {
+    const facturasGuardadas = JSON.parse(localStorage.getItem('facturas')) || [];
+
+    if (index < 0 || index >= facturasGuardadas.length) {
+        alert('Factura no encontrada.');
+        return;
+    }
+
+    // Eliminar la factura seleccionada
+    facturasGuardadas.splice(index, 1);
+    localStorage.setItem('facturas', JSON.stringify(facturasGuardadas));
+
+    alert('Factura eliminada exitosamente.');
+    cargarFacturas();
+}
+
+function editarFactura(index) {
+    const facturasGuardadas = JSON.parse(localStorage.getItem('facturas')) || [];
+    const factura = facturasGuardadas[index];
+
+    if (!factura) {
+        alert('Factura no encontrada.');
+        return;
+    }
+
+    // Establecer el índice de la factura en edición
+    facturaEnEdicion = index;
+
+    // Cargar datos generales de la factura
+    document.getElementById('nombreFactura').value = factura.nombre;
+    document.getElementById('fleteTotal').value = factura.fleteTotal;
+    document.getElementById('otrosCargos').value = factura.otrosCargos;
+
+    // Limpiar la tabla de productos
+    const tbody = document.getElementById('cuerpoTabla');
+    tbody.innerHTML = '';
+
+    // Cargar los productos de la factura
+    factura.productos.forEach(producto => {
+        agregarFila();
+        const rows = tbody.querySelectorAll('tr[id^="fila-main-"]');
+        const lastRow = rows[rows.length - 1]; // Seleccionar la última fila agregada
+        if (lastRow) {
+            const nombreInput = lastRow.querySelector('input[placeholder="Nombre..."]');
+            const cantidadInput = lastRow.querySelector('.cantidad');
+            const netoTotalInput = lastRow.querySelector('.neto-total');
+            const ilaTipoSelect = lastRow.querySelector('.ila-tipo');
+            const margenInput = lastRow.querySelector('.margen-producto');
+
+            if (nombreInput) nombreInput.value = producto.nombre;
+            if (cantidadInput) cantidadInput.value = producto.cantidad;
+            if (netoTotalInput) netoTotalInput.value = producto.netoTotal;
+            if (ilaTipoSelect) ilaTipoSelect.value = producto.ilaTipo;
+            if (margenInput) margenInput.value = producto.margen;
+        }
+    });
+
+    // Recalcular todos los valores para reflejar los datos cargados
+    calcularTodo();
+}
+
+// Cargar facturas al iniciar
+window.onload = function() {
+    agregarFila(); // Asegurar que haya al menos una fila inicial
+    cargarFacturas(); // Cargar las facturas almacenadas en localStorage
+};

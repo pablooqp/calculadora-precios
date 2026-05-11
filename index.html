@@ -18,6 +18,13 @@
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <!-- Columna de Entrada -->
             <div class="lg:col-span-3 space-y-6">
+
+                <!-- 3. Nombre de la Factura -->
+                <div class="bg-white p-6 card">
+                    <h2 class="text-xl font-semibold mb-4 text-indigo-700 border-b pb-2">Nombre de la Factura</h2>
+                    <input type="text" id="nombreFactura" placeholder="Ingrese el nombre de la factura" class="w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
                 <!-- 1. Gastos de la Factura -->
                 <div class="bg-white p-6 card">
                     <h2 class="text-xl font-semibold mb-4 text-indigo-700 border-b pb-2">1. Gastos de la Factura (Netos)</h2>
@@ -59,8 +66,14 @@
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             Añadir Producto
                         </button>
+                        <button onclick="guardarFactura()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center transition shadow-md">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Guardar Factura
+                        </button>
                     </div>
                 </div>
+
+
             </div>
 
             <!-- Resumen Lateral -->
@@ -106,6 +119,14 @@
                     </button>
                 </div>
             </div>
+        </div>
+
+        <!-- Listado de Facturas Trabajadas -->
+        <div class="bg-white p-6 card mt-8">
+            <h2 class="text-xl font-semibold text-indigo-700 mb-4">Facturas Guardadas</h2>
+            <ul id="listadoFacturas" class="space-y-2 text-sm text-gray-700">
+                <!-- Aquí se cargarán las facturas guardadas -->
+            </ul>
         </div>
     </div>
 
