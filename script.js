@@ -336,6 +336,9 @@ function limpiar() {
   document.getElementById("otrosCargos").value = 0;
   document.getElementById("cuerpoTabla").innerHTML = "";
   document.getElementById("nombreFactura").value = "";
+  document.getElementById("numeroFactura").value = "";
+  document.getElementById("nombreEmpresa").value = "";
+  document.getElementById("fechaFactura").value = "";
   agregarFila();
 }
 
@@ -345,14 +348,29 @@ function nuevaFactura() {
   document.getElementById("nombreFactura").focus();
 }
 
+function getFacturaDatosGenerales() {
+  return {
+    numeroFactura: document.getElementById("numeroFactura").value || "",
+    nombreEmpresa: document.getElementById("nombreEmpresa").value || "",
+    fechaFactura: document.getElementById("fechaFactura").value || "",
+    nombre: document.getElementById("nombreFactura").value || "",
+  };
+}
+
+function setFacturaDatosGenerales(factura) {
+  document.getElementById("numeroFactura").value = factura.numeroFactura || "";
+  document.getElementById("nombreEmpresa").value = factura.nombreEmpresa || "";
+  document.getElementById("fechaFactura").value = factura.fechaFactura || "";
+  document.getElementById("nombreFactura").value = factura.nombre || "";
+}
+
 function guardarFactura() {
   const tbody = document.getElementById("cuerpoTabla");
   const mainRows = tbody.querySelectorAll('tr[id^="fila-main-"]');
 
+  const datos = getFacturaDatosGenerales();
   const factura = {
-    nombre:
-      document.getElementById("nombreFactura").value ||
-      `Factura ${new Date().toLocaleString()}`,
+    ...datos,
     fleteTotal: parseFloat(document.getElementById("fleteTotal").value) || 0,
     otrosCargos: parseFloat(document.getElementById("otrosCargos").value) || 0,
     productos: [],
@@ -396,11 +414,15 @@ function cargarFacturas() {
 
   const facturasGuardadas = JSON.parse(localStorage.getItem("facturas")) || [];
   facturasGuardadas.forEach((factura, index) => {
+    let nombreMostrar = factura.nombre && factura.nombre.trim()
+      ? factura.nombre
+      : ((factura.numeroFactura || "") + (factura.nombreEmpresa ? " - " + factura.nombreEmpresa : "")).trim();
+    if (!nombreMostrar) nombreMostrar = `Factura ${index + 1}`;
     const li = document.createElement("li");
     li.className =
       "flex justify-between items-center p-2 bg-gray-50 rounded shadow-sm";
     li.innerHTML = `
-            <span><button onclick="editarFactura(${index})" class="text-indigo-600 hover:underline">${factura.nombre} - Productos: ${factura.productos.length}</button></span>
+            <span><button onclick="editarFactura(${index})" class="text-indigo-600 hover:underline">${nombreMostrar} - Productos: ${factura.productos.length}</button></span>
             <div class="flex space-x-2">
                 <button onclick="descargarFactura(${index})" class="text-green-600 hover:underline">Descargar</button>
                 <button onclick="eliminarFactura(${index})" class="text-red-600 hover:underline">Eliminar</button>
@@ -455,6 +477,12 @@ function importarFactura(event) {
         alert("El archivo no tiene un formato de factura válido.");
         return;
       }
+      // Si faltan datos generales, pedirlos
+      if (!factura.numeroFactura || !factura.nombreEmpresa || !factura.fechaFactura) {
+        factura.numeroFactura = prompt("Ingrese el N° de Factura:", "");
+        factura.nombreEmpresa = prompt("Ingrese el nombre de la empresa:", "");
+        factura.fechaFactura = prompt("Ingrese la fecha de la factura (YYYY-MM-DD):", "");
+      }
       const facturasGuardadas = JSON.parse(localStorage.getItem("facturas")) || [];
       facturasGuardadas.push(factura);
       localStorage.setItem("facturas", JSON.stringify(facturasGuardadas));
@@ -477,11 +505,8 @@ function editarFactura(index) {
     return;
   }
 
-  // Establecer el índice de la factura en edición
   facturaEnEdicion = index;
-
-  // Cargar datos generales de la factura
-  document.getElementById("nombreFactura").value = factura.nombre;
+  setFacturaDatosGenerales(factura);
   document.getElementById("fleteTotal").value = factura.fleteTotal;
   document.getElementById("otrosCargos").value = factura.otrosCargos;
 
@@ -493,16 +518,13 @@ function editarFactura(index) {
   factura.productos.forEach((producto) => {
     agregarFila();
     const rows = tbody.querySelectorAll('tr[id^="fila-main-"]');
-    const lastRow = rows[rows.length - 1]; // Seleccionar la última fila agregada
+    const lastRow = rows[rows.length - 1];
     if (lastRow) {
-      const nombreInput = lastRow.querySelector(
-        'input[placeholder="Nombre..."]',
-      );
+      const nombreInput = lastRow.querySelector('input[placeholder="Nombre..."]');
       const cantidadInput = lastRow.querySelector(".cantidad");
       const netoTotalInput = lastRow.querySelector(".neto-total");
       const ilaTipoSelect = lastRow.querySelector(".ila-tipo");
       const margenInput = lastRow.querySelector(".margen-producto");
-
       if (nombreInput) nombreInput.value = producto.nombre;
       if (cantidadInput) cantidadInput.value = producto.cantidad;
       if (netoTotalInput) netoTotalInput.value = producto.netoTotal;
@@ -510,8 +532,6 @@ function editarFactura(index) {
       if (margenInput) margenInput.value = producto.margen;
     }
   });
-
-  // Recalcular todos los valores para reflejar los datos cargados
   calcularTodo();
 }
 

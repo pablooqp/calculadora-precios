@@ -21,8 +21,25 @@
 
                 <!-- 3. Nombre de la Factura -->
                 <div class="bg-white p-6 card">
-                    <h2 class="text-xl font-semibold mb-4 text-indigo-700 border-b pb-2">Nombre de la Factura</h2>
-                    <input type="text" id="nombreFactura" placeholder="Ingrese el nombre de la factura" class="w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <h2 class="text-xl font-semibold mb-4 text-indigo-700 border-b pb-2">Datos de la Factura</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">N° Factura</label>
+                            <input type="text" id="numeroFactura" placeholder="Ej: 123456" class="w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nombre Empresa</label>
+                            <input type="text" id="nombreEmpresa" placeholder="Nombre de la empresa" class="w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Fecha Factura</label>
+                            <input type="date" id="fechaFactura" class="w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700">Nombre de la Factura</label>
+                        <input type="text" id="nombreFactura" placeholder="Ingrese el nombre de la factura" class="w-full p-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
                 </div>
 
                 <!-- 1. Gastos de la Factura -->
