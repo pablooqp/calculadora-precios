@@ -400,10 +400,9 @@ function cargarFacturas() {
     li.className =
       "flex justify-between items-center p-2 bg-gray-50 rounded shadow-sm";
     li.innerHTML = `
-            <span>${factura.nombre} - Productos: ${factura.productos.length}</span>
+            <span><button onclick="editarFactura(${index})" class="text-indigo-600 hover:underline">${factura.nombre} - Productos: ${factura.productos.length}</button></span>
             <div class="flex space-x-2">
                 <button onclick="descargarFactura(${index})" class="text-green-600 hover:underline">Descargar</button>
-                <button onclick="editarFactura(${index})" class="text-indigo-600 hover:underline">Editar</button>
                 <button onclick="eliminarFactura(${index})" class="text-red-600 hover:underline">Eliminar</button>
             </div>
         `;
