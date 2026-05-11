@@ -402,6 +402,7 @@ function cargarFacturas() {
     li.innerHTML = `
             <span>${factura.nombre} - Productos: ${factura.productos.length}</span>
             <div class="flex space-x-2">
+                <button onclick="descargarFactura(${index})" class="text-green-600 hover:underline">Descargar</button>
                 <button onclick="editarFactura(${index})" class="text-indigo-600 hover:underline">Editar</button>
                 <button onclick="eliminarFactura(${index})" class="text-red-600 hover:underline">Eliminar</button>
             </div>
@@ -424,6 +425,48 @@ function eliminarFactura(index) {
 
   alert("Factura eliminada exitosamente.");
   cargarFacturas();
+}
+
+function descargarFactura(index) {
+  const facturasGuardadas = JSON.parse(localStorage.getItem("facturas")) || [];
+  const factura = facturasGuardadas[index];
+  if (!factura) {
+    alert("Factura no encontrada.");
+    return;
+  }
+  const blob = new Blob([JSON.stringify(factura, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (factura.nombre || "factura").replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ _-]/g, "") + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importarFactura(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const factura = JSON.parse(e.target.result);
+      if (!factura.productos || !Array.isArray(factura.productos)) {
+        alert("El archivo no tiene un formato de factura válido.");
+        return;
+      }
+      const facturasGuardadas = JSON.parse(localStorage.getItem("facturas")) || [];
+      facturasGuardadas.push(factura);
+      localStorage.setItem("facturas", JSON.stringify(facturasGuardadas));
+      cargarFacturas();
+      alert("Factura importada exitosamente: " + factura.nombre);
+    } catch (err) {
+      alert("Error al leer el archivo JSON.");
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = "";
 }
 
 function editarFactura(index) {
