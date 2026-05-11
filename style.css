@@ -35,3 +35,147 @@ input::-webkit-inner-spin-button {
 .rotate-180 {
     transform: rotate(180deg);
 }
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 767px) {
+    body {
+        padding: 0.5rem !important;
+    }
+
+    .card {
+        padding: 1rem !important;
+        border-radius: 8px;
+    }
+
+    /* Tabla como tarjetas en móvil */
+    #tablaProductos thead {
+        display: none;
+    }
+
+    #tablaProductos tbody tr[id^="fila-main-"] {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fafafa;
+        position: relative;
+    }
+
+    #tablaProductos tbody tr[id^="fila-main-"] td {
+        display: flex;
+        align-items: center;
+        padding: 0.25rem 0.25rem;
+        border: none;
+    }
+
+    #tablaProductos tbody tr[id^="fila-main-"] td::before {
+        content: attr(data-label);
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        white-space: nowrap;
+        margin-right: 0.5rem;
+        min-width: fit-content;
+    }
+
+    /* Producto: fila completa */
+    #tablaProductos tbody tr[id^="fila-main-"] td:nth-child(1) {
+        width: 100%;
+        order: 1;
+    }
+
+    /* Cantidad */
+    #tablaProductos tbody tr[id^="fila-main-"] td:nth-child(2) {
+        width: calc(50% - 0.125rem);
+        order: 2;
+    }
+    #tablaProductos tbody tr[id^="fila-main-"] td:nth-child(2) input {
+        width: 100% !important;
+    }
+
+    /* Neto Total */
+    #tablaProductos tbody tr[id^="fila-main-"] td:nth-child(3) {
+        width: calc(50% - 0.125rem);
+        order: 3;
+    }
+
+    /* Neto Unitario */
+    #tablaProductos tbody tr[id^="fila-main-"] td:nth-child(4) {
+        width: calc(50% - 0.125rem);
+        order: 4;
+    }
+
+    /* ILA */
+    #tablaProductos tbody tr[id^="fila-main-"] td:nth-child(5) {
+        width: calc(50% - 0.125rem);
+        order: 5;
+    }
+
+    /* Margen */
+    #tablaProductos tbody tr[id^="fila-main-"] td:nth-child(6) {
+        width: calc(50% - 0.125rem);
+        order: 6;
+    }
+
+    /* Acciones */
+    #tablaProductos tbody tr[id^="fila-main-"] td:nth-child(7) {
+        width: calc(50% - 0.125rem);
+        order: 7;
+        justify-content: flex-end;
+    }
+
+    /* Fila de detalles expandible */
+    #tablaProductos tbody tr[id^="fila-details-"] {
+        display: block;
+    }
+
+    #tablaProductos tbody tr[id^="fila-details-"] td {
+        display: block;
+        padding: 0;
+    }
+
+    .details-panel .grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .details-panel .border-r {
+        border-right: none !important;
+        border-bottom: 1px solid #f3f4f6;
+        padding-right: 0 !important;
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Botones de acción */
+    .mt-4.flex.justify-start {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .mt-4.flex.justify-start button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Resumen factura sticky desactivado en móvil */
+    .sticky {
+        position: relative !important;
+        top: auto !important;
+    }
+
+    /* Facturas guardadas */
+    #listadoFacturas li {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start !important;
+    }
+
+    #listadoFacturas li > div {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

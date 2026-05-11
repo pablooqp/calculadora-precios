@@ -10,29 +10,29 @@ function agregarFila() {
     mainRow.className = "border-t border-gray-100 hover:bg-gray-50/50 transition-colors text-sm align-middle";
 
     mainRow.innerHTML = `
-        <td class="p-2">
+        <td class="p-2" data-label="Producto">
             <input type="text" placeholder="Nombre..." class="w-full p-2 border-gray-200 border rounded-md focus:ring-1 focus:ring-indigo-400 outline-none">
         </td>
-        <td class="p-2 text-center">
+        <td class="p-2 text-center" data-label="Cant.">
             <input type="number" value="1" min="1" class="w-16 p-2 border-gray-200 border rounded-md cantidad text-center" oninput="calcularTodo()">
         </td>
-        <td class="p-2">
+        <td class="p-2" data-label="Neto Total">
             <input type="number" value="0" min="0" class="w-full p-2 border-gray-200 border rounded-md neto-total text-right" oninput="calcularTodo()">
         </td>
-        <td class="p-2 bg-indigo-50/30">
+        <td class="p-2 bg-indigo-50/30" data-label="Neto Unit.">
             <input type="text" readonly class="w-full p-2 border-transparent bg-transparent font-bold text-indigo-700 neto-unitario-display text-right outline-none" value="$0">
         </td>
-        <td class="p-2">
+        <td class="p-2" data-label="ILA">
             <select class="w-full p-2 border-gray-200 border rounded-md ila-tipo text-xs" onchange="calcularTodo()">
                 <option value="0">Sin ILA</option>
                 <option value="0.205">Vino/Cer. (20,5%)</option>
                 <option value="0.315">Destilado (31,5%)</option>
             </select>
         </td>
-        <td class="p-2">
+        <td class="p-2" data-label="Margen %">
             <input type="number" value="30" min="0" max="99" class="w-full p-2 border-gray-200 border rounded-md margen-producto text-center font-semibold text-green-600" oninput="calcularTodo()">
         </td>
-        <td class="p-2 text-center">
+        <td class="p-2 text-center" data-label="">
             <div class="flex items-center justify-center space-x-2">
                 <button onclick="toggleDetails(${rowId})" class="text-indigo-500 hover:text-indigo-700 p-1 transition-transform rotate-180" id="btn-toggle-${rowId}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -263,6 +263,11 @@ function limpiar() {
         document.getElementById('cuerpoTabla').innerHTML = "";
         document.getElementById('nombreFactura').value = "";
         agregarFila();
+}
+
+function nuevaFactura() {
+    facturaEnEdicion = null;
+    limpiar();
 }
 
 function guardarFactura() {
