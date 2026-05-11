@@ -301,6 +301,7 @@ function limpiar() {
 function nuevaFactura() {
   facturaEnEdicion = null;
   limpiar();
+  document.getElementById("nombreFactura").focus();
 }
 
 function guardarFactura() {
@@ -332,7 +333,6 @@ function guardarFactura() {
   if (facturaEnEdicion !== null) {
     // Sobrescribir la factura en edición
     facturasGuardadas[facturaEnEdicion] = factura;
-    facturaEnEdicion = null; // Resetear el estado de edición
     alert("Factura actualizada exitosamente.");
   } else {
     // Agregar una nueva factura
