@@ -112,7 +112,7 @@ function agregarFila() {
                         </div>
                         <div class="flex justify-between items-center bg-indigo-100 p-2 rounded mt-1">
                             <span class="text-indigo-800 font-bold uppercase text-[9px]">P. VENTA FINAL (PVP):</span>
-                            <span class="text-base font-bold text-indigo-900" id="det-venta-sugerida-${rowId}">$0</span>
+                            <input type="number" min="0" class="w-24 text-right text-base font-bold text-indigo-900 bg-white border border-indigo-300 rounded px-1 py-0.5 pvp-input" id="det-venta-sugerida-${rowId}" value="0" oninput="calcularDesdePVP(${rowId})">
                         </div>
                         <div class="flex justify-between items-center bg-green-50 p-1.5 rounded mt-1">
                             <span class="text-green-700 font-bold text-[9px]">GANANCIA NETA REAL:</span>
@@ -145,6 +145,46 @@ function toggleDetails(id) {
   }
 }
 
+function calcularDesdePVP(id) {
+  const mainRow = document.getElementById(`fila-main-${id}`);
+  if (!mainRow) return;
+
+  const pvpInput = document.getElementById(`det-venta-sugerida-${id}`);
+  const pvpFinal = parseFloat(pvpInput.value) || 0;
+
+  const cant = parseFloat(mainRow.querySelector('.cantidad').value) || 0;
+  const netoTotalLinea = parseFloat(mainRow.querySelector('.neto-total').value) || 0;
+  const tasaILA = parseFloat(mainRow.querySelector('.ila-tipo').value) || 0;
+
+  if (cant <= 0 || pvpFinal <= 0) return;
+
+  const fleteTotal = parseFloat(document.getElementById('fleteTotal').value) || 0;
+  const otrosCargos = parseFloat(document.getElementById('otrosCargos').value) || 0;
+  const tbody = document.getElementById('cuerpoTabla');
+  const allRows = tbody.querySelectorAll('tr[id^="fila-main-"]');
+  let totalUnidades = 0;
+  allRows.forEach(r => totalUnidades += parseFloat(r.querySelector('.cantidad').value) || 0);
+  const logisticaUnitario = totalUnidades > 0 ? (fleteTotal + otrosCargos) / totalUnidades : 0;
+
+  const netoUnitario = netoTotalLinea / cant;
+  const ilaCompraUnit = netoUnitario * tasaILA;
+  const costoReposicionUnit = netoUnitario + logisticaUnitario + ilaCompraUnit;
+
+  // PVP = netoVenta * 1.19 => netoVenta = PVP / 1.19
+  const netoVentaSugerido = pvpFinal / 1.19;
+
+  // margen = 1 - (costoReposicion / netoVenta)
+  const margenCalculado = costoReposicionUnit > 0 && netoVentaSugerido > 0
+    ? (1 - costoReposicionUnit / netoVentaSugerido) * 100
+    : 0;
+
+  // Actualizar el campo margen con 2 decimales
+  mainRow.querySelector('.margen-producto').value = margenCalculado.toFixed(2);
+
+  // Recalcular todo sin que se pise el PVP ingresado
+  calcularTodo(id);
+}
+
 function eliminarFila(id) {
   if (document.getElementById(`fila-main-${id}`))
     document.getElementById(`fila-main-${id}`).remove();
@@ -160,7 +200,7 @@ function formatoDinero(valor) {
   }).format(Math.round(valor));
 }
 
-function calcularTodo() {
+function calcularTodo(skipPvpId) {
   const fleteTotal =
     parseFloat(document.getElementById("fleteTotal").value) || 0;
   const otrosCargos =
@@ -266,8 +306,9 @@ function calcularTodo() {
       const detVentaSugerida = document.getElementById(
         `det-venta-sugerida-${id}`,
       );
-      if (detVentaSugerida)
-        detVentaSugerida.innerText = formatoDinero(pvpFinal);
+      if (detVentaSugerida && parseInt(id) !== skipPvpId) {
+        detVentaSugerida.value = Math.round(pvpFinal);
+      }
 
       const detGanancia = document.getElementById(`det-ganancia-${id}`);
       if (detGanancia) detGanancia.innerText = formatoDinero(gananciaNetaUnit);
