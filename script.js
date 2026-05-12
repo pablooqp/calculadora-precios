@@ -321,6 +321,14 @@ function calcularTodo(skipPvpId) {
   const totales = calcularTotalesFactura();
   const { mainRows, granTotalFactura, sumaBrutosTeoricos } = totales;
 
+  // Acumuladores para resumen de rentabilidad
+  let rentTotalUnidades = 0;
+  let rentSumaCostoReposicion = 0;
+  let rentSumaVentaPVP = 0;
+  let rentSumaVentaNeta = 0;
+  let rentSumaGananciaBruta = 0;
+  let rentSumaIvaPagar = 0;
+
   mainRows.forEach((row) => {
     const id = row.id.split("-").pop();
     const cant = parseFloat(row.querySelector(".cantidad").value) || 0;
@@ -351,6 +359,14 @@ function calcularTodo(skipPvpId) {
 
       const diferenciaIVA = ivaVentaUnit - ivaCompraUnit;
       const gananciaNetaUnit = netoVentaSugerido - costoReposicionUnit;
+
+      // Acumular para resumen de rentabilidad
+      rentTotalUnidades += cant;
+      rentSumaCostoReposicion += costoReposicionUnit * cant;
+      rentSumaVentaPVP += pvpFinal * cant;
+      rentSumaVentaNeta += netoVentaSugerido * cant;
+      rentSumaGananciaBruta += gananciaNetaUnit * cant;
+      rentSumaIvaPagar += diferenciaIVA * cant;
 
       // Bloque 1
       const detNetoBase = document.getElementById(`det-neto-base-${id}`);
@@ -410,6 +426,28 @@ function calcularTodo(skipPvpId) {
     }
   });
 
+  // === Actualizar Resumen Rentabilidad ===
+  // El IVA es impuesto de paso (crédito/débito se compensan), no reduce la ganancia.
+  // La ganancia neta real = sumaVentaNeta - sumaCostoReposicion (ya calculada como rentSumaGananciaBruta).
+  const rentGananciaNeta = rentSumaGananciaBruta;
+  const rentGananciaUnidad = rentTotalUnidades > 0 ? rentGananciaNeta / rentTotalUnidades : 0;
+  const rentROI = granTotalFactura > 0 ? (rentGananciaNeta / granTotalFactura) * 100 : 0;
+  const rentMargenProm = rentSumaVentaNeta > 0 ? (rentSumaGananciaBruta / rentSumaVentaNeta) * 100 : 0;
+
+  document.getElementById("rentCantProductos").innerText = rentTotalUnidades + " uds.";
+  document.getElementById("rentInversion").innerText = formatoDinero(granTotalFactura);
+  document.getElementById("rentCostoReposicion").innerText = formatoDinero(rentSumaCostoReposicion);
+  document.getElementById("rentVentaTotal").innerText = formatoDinero(rentSumaVentaPVP);
+  document.getElementById("rentVentaNeta").innerText = formatoDinero(rentSumaVentaNeta);
+  document.getElementById("rentIvaSII").innerText = formatoDinero(rentSumaIvaPagar);
+  document.getElementById("rentILATotal").innerText = formatoDinero(totales.totalILA);
+  document.getElementById("rentGananciaBruta").innerText = formatoDinero(rentSumaGananciaBruta);
+  document.getElementById("rentGananciaNeta").innerText = formatoDinero(rentGananciaNeta);
+  document.getElementById("rentGananciaUnidad").innerText = formatoDinero(rentGananciaUnidad);
+  document.getElementById("rentROI").innerText = rentROI.toFixed(1) + "%";
+  document.getElementById("rentMargenProm").innerText = rentMargenProm.toFixed(1) + "%";
+
+  // === Actualizar Resumen Factura ===
   document.getElementById("resNeto").innerText =
     formatoDinero(totales.subtotalNetoFactura);
   document.getElementById("resILAVino").innerText = formatoDinero(totales.sumaILAVino);
