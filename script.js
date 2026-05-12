@@ -1,6 +1,10 @@
 let rowCount = 0;
 let facturaEnEdicion = null; // Variable para rastrear si se está editando una factura
 
+function esDispositivoMovil() {
+  return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+}
+
 function agregarFila() {
   const tbody = document.getElementById("cuerpoTabla");
   const rowId = rowCount;
