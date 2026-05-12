@@ -279,7 +279,7 @@ function calcularLogisticaUnitario(netoUnitario, cant, netoTotalLinea, tasaILA, 
     return calcularTransporteCCU(totales.fleteTotal + totales.otrosCargos, numLineas, cant);
   }
   if (metodo === 'proporcional') {
-    return obtenerTransporteUnitario(netoUnitario, tasaILA, totales.granTotalFactura, totales.sumaBrutosTeoricos);
+    return obtenerTransporteUnitario(netoUnitario, tasaILA, totales.granTotalFactura, totales.sumaBrutosTeoricos, totales.ivaSinILA);
   }
   const totalUnidades = Array.from(totales.mainRows).reduce((sum, r) => sum + (parseFloat(r.querySelector('.cantidad').value) || 0), 0);
   return totalUnidades > 0 ? (totales.fleteTotal + totales.otrosCargos) / totalUnidades : 0;
@@ -291,11 +291,13 @@ function calcularTransporteCCU(netoFleteFactura, numLineas, cantidadUnidades) {
   return parseFloat((fletePorLinea / cantidadUnidades).toFixed(2));
 }
 
-function obtenerTransporteUnitario(netoUnitario, tasaILA, totalFactura, sumaBrutosTeoricos) {
+function obtenerTransporteUnitario(netoUnitario, tasaILA, totalFactura, sumaBrutosTeoricos, ivaSinILA) {
   const TASA_IVA = 0.19;
   if (sumaBrutosTeoricos === 0) return 0;
   const factorRecargo = totalFactura / sumaBrutosTeoricos;
-  const brutoSinFlete = netoUnitario * (1 + tasaILA) * (1 + TASA_IVA);
+  const brutoSinFlete = ivaSinILA
+    ? netoUnitario * (1 + TASA_IVA) + netoUnitario * tasaILA
+    : netoUnitario * (1 + tasaILA) * (1 + TASA_IVA);
   const brutoConFlete = brutoSinFlete * factorRecargo;
   const transporteBruto = brutoConFlete - brutoSinFlete;
   const transporteNetoUnitario = transporteBruto / (1 + TASA_IVA);
@@ -313,6 +315,8 @@ function calcularTotalesFactura() {
   let sumaILADestilado = 0;
   let sumaBrutosTeoricos = 0;
 
+  const ivaSinILA = document.getElementById('ivaSinILA').checked;
+
   mainRows.forEach((row) => {
     const netoTotalLinea = parseFloat(row.querySelector(".neto-total").value) || 0;
     const tasaILA = parseFloat(row.querySelector(".ila-tipo").value) || 0;
@@ -320,12 +324,13 @@ function calcularTotalesFactura() {
     const ilaLinea = netoTotalLinea * tasaILA;
     if (tasaILA === 0.205) sumaILAVino += ilaLinea;
     else if (tasaILA === 0.315) sumaILADestilado += ilaLinea;
-    sumaBrutosTeoricos += netoTotalLinea * (1 + tasaILA) * 1.19;
+    sumaBrutosTeoricos += ivaSinILA
+      ? netoTotalLinea * (1.19 + tasaILA)
+      : netoTotalLinea * (1 + tasaILA) * 1.19;
   });
 
   const subtotalNetoFactura = sumaNetosFactura + fleteTotal + otrosCargos;
   const totalILA = sumaILAVino + sumaILADestilado;
-  const ivaSinILA = document.getElementById('ivaSinILA').checked;
   const totalIVAFactura = ivaSinILA
     ? subtotalNetoFactura * 0.19
     : (subtotalNetoFactura + totalILA) * 0.19;
@@ -335,7 +340,7 @@ function calcularTotalesFactura() {
     fleteTotal, otrosCargos, mainRows,
     sumaNetosFactura, sumaILAVino, sumaILADestilado,
     sumaBrutosTeoricos, subtotalNetoFactura, totalILA,
-    totalIVAFactura, granTotalFactura
+    totalIVAFactura, granTotalFactura, ivaSinILA
   };
 }
 
