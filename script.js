@@ -238,7 +238,7 @@ function calcularDesdePVP(id) {
 
   const totales = calcularTotalesFactura();
   const netoUnitario = netoTotalLinea / cant;
-  const logisticaUnitario = calcularLogisticaUnitario(netoUnitario, tasaILA, totales);
+  const logisticaUnitario = calcularLogisticaUnitario(netoUnitario, cant, netoTotalLinea, tasaILA, totales);
   const ilaCompraUnit = netoUnitario * tasaILA;
   const costoReposicionUnit = netoUnitario + logisticaUnitario + ilaCompraUnit;
 
@@ -272,20 +272,30 @@ function formatoDinero(valor) {
   }).format(Math.round(valor));
 }
 
-function calcularLogisticaUnitario(netoUnitario, tasaILA, totales) {
-  const usarProporcional = document.getElementById('fleteProporcional').checked;
-  if (usarProporcional) {
+function calcularLogisticaUnitario(netoUnitario, cant, netoTotalLinea, tasaILA, totales) {
+  const metodo = document.getElementById('metodoFlete').value;
+  if (metodo === 'ccu') {
+    const numLineas = totales.mainRows.length;
+    return calcularTransporteCCU(totales.fleteTotal + totales.otrosCargos, numLineas, cant);
+  }
+  if (metodo === 'proporcional') {
     return obtenerTransporteUnitario(netoUnitario, tasaILA, totales.granTotalFactura, totales.sumaBrutosTeoricos);
   }
   const totalUnidades = Array.from(totales.mainRows).reduce((sum, r) => sum + (parseFloat(r.querySelector('.cantidad').value) || 0), 0);
   return totalUnidades > 0 ? (totales.fleteTotal + totales.otrosCargos) / totalUnidades : 0;
 }
 
+function calcularTransporteCCU(netoFleteFactura, numLineas, cantidadUnidades) {
+  if (numLineas === 0 || cantidadUnidades === 0) return 0;
+  const fletePorLinea = netoFleteFactura / numLineas;
+  return parseFloat((fletePorLinea / cantidadUnidades).toFixed(2));
+}
+
 function obtenerTransporteUnitario(netoUnitario, tasaILA, totalFactura, sumaBrutosTeoricos) {
   const TASA_IVA = 0.19;
   if (sumaBrutosTeoricos === 0) return 0;
   const factorRecargo = totalFactura / sumaBrutosTeoricos;
-  const brutoSinFlete = netoUnitario * (1 + tasaILA + TASA_IVA);
+  const brutoSinFlete = netoUnitario * (1 + tasaILA) * (1 + TASA_IVA);
   const brutoConFlete = brutoSinFlete * factorRecargo;
   const transporteBruto = brutoConFlete - brutoSinFlete;
   const transporteNetoUnitario = transporteBruto / (1 + TASA_IVA);
@@ -310,12 +320,15 @@ function calcularTotalesFactura() {
     const ilaLinea = netoTotalLinea * tasaILA;
     if (tasaILA === 0.205) sumaILAVino += ilaLinea;
     else if (tasaILA === 0.315) sumaILADestilado += ilaLinea;
-    sumaBrutosTeoricos += netoTotalLinea * (1 + tasaILA + 0.19);
+    sumaBrutosTeoricos += netoTotalLinea * (1 + tasaILA) * 1.19;
   });
 
   const subtotalNetoFactura = sumaNetosFactura + fleteTotal + otrosCargos;
   const totalILA = sumaILAVino + sumaILADestilado;
-  const totalIVAFactura = subtotalNetoFactura * 0.19;
+  const ivaSinILA = document.getElementById('ivaSinILA').checked;
+  const totalIVAFactura = ivaSinILA
+    ? subtotalNetoFactura * 0.19
+    : (subtotalNetoFactura + totalILA) * 0.19;
   const granTotalFactura = subtotalNetoFactura + totalILA + totalIVAFactura;
 
   return {
@@ -352,12 +365,15 @@ function calcularTodo(skipPvpId) {
       formatoDinero(netoUnitario);
 
     if (cant > 0) {
-      const logisticaUnitario = calcularLogisticaUnitario(netoUnitario, tasaILA, totales);
+      const logisticaUnitario = calcularLogisticaUnitario(netoUnitario, cant, netoTotalLinea, tasaILA, totales);
       const ilaCompraUnit = netoUnitario * tasaILA;
       const costoReposicionUnit =
         netoUnitario + logisticaUnitario + ilaCompraUnit;
 
-      const ivaCompraUnit = (netoUnitario + logisticaUnitario) * 0.19;
+      const ivaSinILA = document.getElementById('ivaSinILA').checked;
+      const ivaCompraUnit = ivaSinILA
+        ? (netoUnitario + logisticaUnitario) * 0.19
+        : (netoUnitario + logisticaUnitario + ilaCompraUnit) * 0.19;
       const desembolsoTotalFacturaUnit =
         netoUnitario + logisticaUnitario + ilaCompraUnit + ivaCompraUnit;
 
@@ -471,6 +487,8 @@ function calcularTodo(skipPvpId) {
 function limpiar() {
   document.getElementById("fleteTotal").value = 0;
   document.getElementById("otrosCargos").value = 0;
+  document.getElementById("metodoFlete").value = "proporcional";
+  document.getElementById("ivaSinILA").checked = false;
   document.getElementById("cuerpoTabla").innerHTML = "";
   document.getElementById("nombreFactura").value = "";
   document.getElementById("numeroFactura").value = "";
@@ -510,6 +528,8 @@ function guardarFactura() {
     ...datos,
     fleteTotal: parseFloat(document.getElementById("fleteTotal").value) || 0,
     otrosCargos: parseFloat(document.getElementById("otrosCargos").value) || 0,
+    metodoFlete: document.getElementById("metodoFlete").value || "proporcional",
+    ivaSinILA: document.getElementById("ivaSinILA").checked || false,
     productos: [],
   };
 
@@ -646,6 +666,8 @@ function editarFactura(index) {
   setFacturaDatosGenerales(factura);
   document.getElementById("fleteTotal").value = factura.fleteTotal;
   document.getElementById("otrosCargos").value = factura.otrosCargos;
+  if (factura.metodoFlete) document.getElementById("metodoFlete").value = factura.metodoFlete;
+  document.getElementById("ivaSinILA").checked = !!factura.ivaSinILA;
 
   // Limpiar la tabla de productos
   const tbody = document.getElementById("cuerpoTabla");
