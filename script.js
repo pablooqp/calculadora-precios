@@ -1,5 +1,74 @@
 let rowCount = 0;
 let facturaEnEdicion = null; // Variable para rastrear si se está editando una factura
+let productosCache = [];
+
+async function cargarProductos() {
+  try {
+    const resp = await fetch('https://pub-003150e7951b49dcafdf09e331520cd5.r2.dev/productos.json');
+    const json = await resp.json();
+    productosCache = (json.data || []).filter(p => p.DESCRIPCION && p.DESCRIPCION.trim());
+  } catch (e) {
+    console.error('Error al cargar productos:', e);
+  }
+}
+
+function configurarAutocompletado(input, rowId) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'autocomplete-wrapper';
+  input.parentNode.insertBefore(wrapper, input);
+  wrapper.appendChild(input);
+
+  const lista = document.createElement('ul');
+  lista.className = 'autocomplete-list';
+  document.body.appendChild(lista);
+
+  let seleccionado = false;
+
+  function posicionarLista() {
+    const rect = input.getBoundingClientRect();
+    lista.style.left = rect.left + 'px';
+    lista.style.top = (rect.bottom + 2) + 'px';
+    lista.style.width = rect.width + 'px';
+  }
+
+  input.addEventListener('input', function () {
+    seleccionado = false;
+    const texto = this.value.trim().toLowerCase();
+    lista.innerHTML = '';
+    if (texto.length < 2) { lista.style.display = 'none'; return; }
+    const resultados = productosCache.filter(p =>
+      p.DESCRIPCION.toLowerCase().includes(texto)
+    ).slice(0, 10);
+    if (resultados.length === 0) { lista.style.display = 'none'; return; }
+    resultados.forEach(p => {
+      const li = document.createElement('li');
+      li.className = 'autocomplete-item';
+      li.innerHTML = `<span>${p.DESCRIPCION}</span><span class="text-xs text-gray-400 ml-2">PV: $${p.PVENTA.toLocaleString('es-CL')}</span>`;
+      li.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        input.value = p.DESCRIPCION;
+        seleccionado = true;
+        lista.style.display = 'none';
+        const label = document.getElementById(`det-pventa-programa-${rowId}`);
+        if (label) {
+          label.innerText = `Precio programa de venta: $${p.PVENTA.toLocaleString('es-CL')}`;
+          label.style.display = 'block';
+        }
+      });
+      lista.appendChild(li);
+    });
+    posicionarLista();
+    lista.style.display = 'block';
+  });
+
+  input.addEventListener('blur', function () {
+    setTimeout(() => { lista.style.display = 'none'; }, 150);
+  });
+
+  input.addEventListener('focus', function () {
+    if (lista.children.length > 0 && !seleccionado) lista.style.display = 'block';
+  });
+}
 
 function esDispositivoMovil() {
   return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
@@ -114,6 +183,7 @@ function agregarFila() {
                             <span>IVA Venta:</span>
                             <span id="det-iva-venta-val-${rowId}">$0</span>
                         </div>
+                        <div class="text-[9px] text-orange-600 font-semibold hidden" id="det-pventa-programa-${rowId}"></div>
                         <div class="flex justify-between items-center bg-indigo-100 p-2 rounded mt-1">
                             <span class="text-indigo-800 font-bold uppercase text-[9px]">P. VENTA FINAL (PVP):</span>
                             <input type="number" min="0" class="w-24 text-right text-base font-bold text-indigo-900 bg-white border border-indigo-300 rounded px-1 py-0.5 pvp-input" id="det-venta-sugerida-${rowId}" value="0" oninput="calcularDesdePVP(${rowId})">
@@ -131,6 +201,10 @@ function agregarFila() {
 
   tbody.appendChild(mainRow);
   tbody.appendChild(detailsRow);
+
+  const productoInput = mainRow.querySelector('input[placeholder="Nombre..."]');
+  if (productoInput) configurarAutocompletado(productoInput, rowId);
+
   rowCount++;
   calcularTodo();
 }
@@ -545,6 +619,7 @@ window.onload = function () {
     document.body.classList.add('vista-movil');
     // Aquí puedes agregar más lógica específica para móviles si lo deseas
   }
+  cargarProductos(); // Cargar productos para autocompletado
   agregarFila(); // Asegurar que haya al menos una fila inicial
   cargarFacturas(); // Cargar las facturas almacenadas en localStorage
 };

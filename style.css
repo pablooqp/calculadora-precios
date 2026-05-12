@@ -36,6 +36,45 @@ input::-webkit-inner-spin-button {
     transform: rotate(180deg);
 }
 
+/* ===== Autocomplete ===== */
+.autocomplete-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.autocomplete-list {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    max-height: 220px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    margin-top: 2px;
+    list-style: none;
+    padding: 0;
+}
+
+.autocomplete-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover {
+    background: #eef2ff;
+}
+
 /* ===== Mobile Responsive ===== */
 @media (max-width: 767px) {
     body {
