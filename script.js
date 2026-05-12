@@ -238,7 +238,7 @@ function calcularDesdePVP(id) {
 
   const totales = calcularTotalesFactura();
   const netoUnitario = netoTotalLinea / cant;
-  const logisticaUnitario = obtenerTransporteUnitario(netoUnitario, tasaILA, totales.granTotalFactura, totales.sumaBrutosTeoricos);
+  const logisticaUnitario = calcularLogisticaUnitario(netoUnitario, tasaILA, totales);
   const ilaCompraUnit = netoUnitario * tasaILA;
   const costoReposicionUnit = netoUnitario + logisticaUnitario + ilaCompraUnit;
 
@@ -270,6 +270,15 @@ function formatoDinero(valor) {
     style: "currency",
     currency: "CLP",
   }).format(Math.round(valor));
+}
+
+function calcularLogisticaUnitario(netoUnitario, tasaILA, totales) {
+  const usarProporcional = document.getElementById('fleteProporcional').checked;
+  if (usarProporcional) {
+    return obtenerTransporteUnitario(netoUnitario, tasaILA, totales.granTotalFactura, totales.sumaBrutosTeoricos);
+  }
+  const totalUnidades = Array.from(totales.mainRows).reduce((sum, r) => sum + (parseFloat(r.querySelector('.cantidad').value) || 0), 0);
+  return totalUnidades > 0 ? (totales.fleteTotal + totales.otrosCargos) / totalUnidades : 0;
 }
 
 function obtenerTransporteUnitario(netoUnitario, tasaILA, totalFactura, sumaBrutosTeoricos) {
@@ -343,7 +352,7 @@ function calcularTodo(skipPvpId) {
       formatoDinero(netoUnitario);
 
     if (cant > 0) {
-      const logisticaUnitario = obtenerTransporteUnitario(netoUnitario, tasaILA, granTotalFactura, sumaBrutosTeoricos);
+      const logisticaUnitario = calcularLogisticaUnitario(netoUnitario, tasaILA, totales);
       const ilaCompraUnit = netoUnitario * tasaILA;
       const costoReposicionUnit =
         netoUnitario + logisticaUnitario + ilaCompraUnit;

@@ -49,6 +49,10 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Flete Total Neto ($)</label>
                             <input type="number" id="fleteTotal" value="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border focus:ring-indigo-500 focus:border-indigo-500" oninput="calcularTodo()">
+                            <label class="inline-flex items-center mt-2 cursor-pointer select-none">
+                                <input type="checkbox" id="fleteProporcional" checked class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" onchange="calcularTodo()">
+                                <span class="ml-2 text-xs text-gray-600">Prorrateo proporcional</span>
+                            </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Otros Cargos Netos ($)</label>
