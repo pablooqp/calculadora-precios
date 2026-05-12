@@ -541,6 +541,10 @@ function editarFactura(index) {
 
 // Cargar facturas al iniciar
 window.onload = function () {
+  if (esDispositivoMovil()) {
+    document.body.classList.add('vista-movil');
+    // Aquí puedes agregar más lógica específica para móviles si lo deseas
+  }
   agregarFila(); // Asegurar que haya al menos una fila inicial
   cargarFacturas(); // Cargar las facturas almacenadas en localStorage
 };
