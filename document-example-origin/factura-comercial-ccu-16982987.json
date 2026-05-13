@@ -1,0 +1,82 @@
+{
+  "documento": {
+    "tipo": "FACTURA ELECTRONICA",
+    "folio": "16982987",
+    "sucursal": "S.I.I. - SANTIAGO ORIENTE"
+  },
+  "emisor": {
+    "nombre": "COMMERCIAL CCU S.A.",
+    "rut": "99.554.560-8",
+    "direccion": "Casa Matriz: Avda. Vitacura 2670, Piso 23, Santiago - Chile",
+    "giro": "Comercializadora de bebidas alcohólicas y productos alimenticios en general."
+  },
+  "cliente": {
+    "nombre": "RCM COMERCIALIZADORA SPA",
+    "rut": "77.725.407-3",
+    "direccion_factura": "RUTA N48 Km 8.3",
+    "direccion_entrega": "RUTA N48 Km 8.3",
+    "comuna": "BULNES",
+    "local": "ALMACEN"
+  },
+  "datos_transaccion": {
+    "fecha_factura": "14/09/2025",
+    "lugar_emision": "CHILLAN",
+    "nro_pedido": "98766031",
+    "forma_pago": "EFECTIVO",
+    "vencimiento": "15/09/2025",
+    "camion": "2337854",
+    "territorio": "96519",
+    "preventa": "96519"
+  },
+  "detalle_items": [
+    {
+      "codigo": "700039",
+      "descripcion": "GATO-VINO-IM2-CAB.SAUV. VN81500CCX8",
+      "grado_alcoholico": "12,0",
+      "unidad_medida": "CJ",
+      "cantidad": 1,
+      "precio_unitario": 25263.00,
+      "descuento": 8903,
+      "valor_total": 16360
+    },
+    {
+      "codigo": "700041",
+      "descripcion": "GATO-VINO-IM2-MERLOT VN81500CCX8",
+      "grado_alcoholico": "12,0",
+      "unidad_medida": "CJ",
+      "cantidad": 1,
+      "precio_unitario": 25263.00,
+      "descuento": 8903,
+      "valor_total": 16360
+    },
+    {
+      "codigo": "701107",
+      "descripcion": "GATO-DULCE-CHO-VNR1500CCX8-TR",
+      "grado_alcoholico": "8,0",
+      "unidad_medida": "CJ",
+      "cantidad": 1,
+      "precio_unitario": 27784.00,
+      "descuento": 8335,
+      "valor_total": 19449
+    },
+    {
+      "codigo": "9999",
+      "descripcion": "Flete de Mercaderías",
+      "cantidad": 1,
+      "valor_total": 7620
+    }
+  ],
+  "totales": {
+    "subtotal": 59789,
+    "neto": 59789,
+    "impuestos": {
+      "ila_vino_20_5": 10695,
+      "iva_19": 11360
+    },
+    "total_factura": 81844
+  },
+  "observaciones": {
+    "nota_impuestos": "*** FACTURA POR VINOS-LICORES *** (Datos Transferencias - Nombre : Transportes CCU Ltda RUT : 79.862.750-3 Banco : Banco de Chile Tipo Cuenta : Corriente Numero de Cuenta : 2230527208 Correo : Grptramfsantiago.cl Zona : Centro sur Localidad : Chillan)",
+    "desarrollo_software": "Facturación Electrónica desarrollada por Xerox de Chile S.A. - Fono : 2338 7000"
+  }
+}

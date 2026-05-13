@@ -1,0 +1,124 @@
+{
+  "empresa": {
+    "nombre": "DISTRIBUIDORA EL TROPEZON SPA",
+    "descripcion": "VENTA AL POR MAYOR DE BEBIDAS ALCOHÓLICAS Y NO ALCOHÓLICAS",
+    "direccion": "PASAJE 570, LAGUNA REDONDA 2, CONCEPCIÓN",
+    "fono": "12345678",
+    "rut": "77171114-6"
+  },
+  "documento": {
+    "tipo": "FACTURA ELECTRONICA",
+    "numero": "40989",
+    "sucursal": "S.I.I. - CONCEPCIÓN"
+  },
+  "cliente": {
+    "nombre": "RCM COMERCIALIZADORA SPA",
+    "rut": "77725407-3",
+    "giro": "VENTA AL POR MENOR DE BEBIDAS ALCOHÓLICAS Y NO",
+    "direccion": "QUETRAHUE LT A 1 SANTA ROSA BULNES",
+    "comuna_ciudad": "BULNES,",
+    "contacto": "luis7_ortega@hotmail.com",
+    "fono": "979255496"
+  },
+  "informacion_pago": {
+    "emitido": "2026-05-06",
+    "vence": "2026-05-21",
+    "pago": "Crédito",
+    "vendedor": "33"
+  },
+  "detalles": [
+    {
+      "cantidad": 8,
+      "codigo": "VIN004160",
+      "detalle": "GATO MERLOT BOT. 1500 X8",
+      "cajas": 1,
+      "p_unitario": 3928.028674,
+      "desc_$": 12.570,
+      "total": 18.855
+    },
+    {
+      "cantidad": 6,
+      "codigo": "VIN004118",
+      "detalle": "EXP. SELECTO MERLOT BOT. 1500 X6",
+      "cajas": 1,
+      "p_unitario": 3598.422939,
+      "desc_$": 8.636,
+      "total": 12.954
+    },
+    {
+      "cantidad": 1,
+      "codigo": "LIC000000",
+      "detalle": "PROMO RAMAZZOTTI 15 750ML X 6 CJ1",
+      "cajas": 1,
+      "p_unitario": 61987.342193,
+      "desc_$": 24.795,
+      "total": 37.192
+    },
+    {
+      "cantidad": 3,
+      "codigo": "LIC005206",
+      "detalle": "APEROL APERITIVO 750CC 11 GDS.",
+      "cajas": 0.5,
+      "p_unitario": 9387.641196,
+      "desc_$": 11.265,
+      "total": 16.898
+    },
+    {
+      "cantidad": 3,
+      "codigo": "DIG005111",
+      "detalle": "CACAO MITJANS 750 25G. X6",
+      "cajas": 0.5,
+      "p_unitario": 4412.292359,
+      "desc_$": 5.295,
+      "total": 7.942
+    },
+    {
+      "cantidad": 2,
+      "codigo": "VIN004093",
+      "detalle": "CASILLERO DD.RVA CAB SAUV. 750X12",
+      "cajas": 0.2,
+      "p_unitario": 4643.082437,
+      "desc_$": 3.714,
+      "total": 5.572
+    },
+    {
+      "cantidad": 2,
+      "codigo": "VIN004209",
+      "detalle": "MISIONES VAR. CARMENERE 750 X12",
+      "cajas": 0.2,
+      "p_unitario": 3132.616487,
+      "desc_$": 2.506,
+      "total": 3.759
+    },
+    {
+      "cantidad": 3,
+      "codigo": "VIN004208",
+      "detalle": "MISIONES VAR. CAB. SAUV. 750 X12",
+      "cajas": 0.3,
+      "p_unitario": 3132.616487,
+      "desc_$": 3.759,
+      "total": 5.639
+    },
+    {
+      "cantidad": 2,
+      "codigo": "VIN004301",
+      "detalle": "MISIONES VAR. MERLOT 750 X12",
+      "cajas": 0.2,
+      "p_unitario": 3132.616487,
+      "desc_$": 2.506,
+      "total": 3.759
+    }
+  ],
+  "totales": {
+    "subtotal": 112570,
+    "descuento_ex": 0,
+    "descuento": 0,
+    "costo_logistico": 7247,
+    "neto": 119817,
+    "exento": 0,
+    "iva_19": 22765,
+    "vinos_20_5": 10361,
+    "licores_piscos_whisky_31_5": 19541,
+    "monto_total": 172482
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "numeroFactura": "40989",
+  "nombreEmpresa": "El TROPEZON SPA",
+  "fechaFactura": "2026-05-06",
+  "nombre": "",
+  "fleteTotal": 7247,
+  "otrosCargos": 0,
+  "metodoFlete": "proporcional",
+  "ivaSinILA": true,
+  "productos": [
+    {
+      "nombre": "VINO GATO MERLOT 1.5 L",
+      "cantidad": 8,
+      "netoTotal": 18855,
+      "ilaTipo": 0.205,
+      "margen": 26.75
+    },
+    {
+      "nombre": "VINO EXPORTACION SELECTO MERLOT 1.5 L",
+      "cantidad": 6,
+      "netoTotal": 12954,
+      "ilaTipo": 0.205,
+      "margen": 29.25
+    },
+    {
+      "nombre": "RAMAZZOTTI ROSATO 700ML ",
+      "cantidad": 6,
+      "netoTotal": 37192,
+      "ilaTipo": 0.315,
+      "margen": 26.68
+    },
+    {
+      "nombre": "APEROL 750ML",
+      "cantidad": 3,
+      "netoTotal": 16898,
+      "ilaTipo": 0.315,
+      "margen": 28.21
+    },
+    {
+      "nombre": "MITJANS CACAO 750ML",
+      "cantidad": 3,
+      "netoTotal": 7942,
+      "ilaTipo": 0.315,
+      "margen": 41.97
+    },
+    {
+      "nombre": "CASILLERO DEL DIABLO RED BLEND 750ML",
+      "cantidad": 2,
+      "netoTotal": 5572,
+      "ilaTipo": 0.205,
+      "margen": 28.82
+    },
+    {
+      "nombre": "MISIONES DE RENGO CARMENERE 750ML",
+      "cantidad": 2,
+      "netoTotal": 3759,
+      "ilaTipo": 0.205,
+      "margen": 27.36
+    },
+    {
+      "nombre": "MISION DE RENGO CABERNET SAUVIGNON 750ML",
+      "cantidad": 3,
+      "netoTotal": 5639,
+      "ilaTipo": 0.205,
+      "margen": 27.35
+    },
+    {
+      "nombre": "MISIONES DE RENGO MERLOT 750ML ",
+      "cantidad": 2,
+      "netoTotal": 3759,
+      "ilaTipo": 0.205,
+      "margen": 27.36
+    }
+  ]
+}

@@ -258,11 +258,13 @@ function calcularDesdePVP(id) {
 }
 
 function eliminarFila(id) {
-  if (document.getElementById(`fila-main-${id}`))
-    document.getElementById(`fila-main-${id}`).remove();
-  if (document.getElementById(`fila-details-${id}`))
-    document.getElementById(`fila-details-${id}`).remove();
-  calcularTodo();
+  if (confirm("¿Desea eliminar la fila?")) {
+    if (document.getElementById(`fila-main-${id}`))
+      document.getElementById(`fila-main-${id}`).remove();
+    if (document.getElementById(`fila-details-${id}`))
+      document.getElementById(`fila-details-${id}`).remove();
+    calcularTodo();
+  }
 }
 
 function formatoDinero(valor) {

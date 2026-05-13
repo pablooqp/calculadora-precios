@@ -1,0 +1,110 @@
+{
+  "documento": {
+    "tipo": "NOTA DE VENTA",
+    "numero": "40989"
+  },
+  "empresa": {
+    "nombre": "TROPEZON",
+    "rut": "77.171.114-6",
+    "direccion": "PASAJE 12 Nº 570 LAGUNA REDONDA CONCEPCIÓN"
+  },
+  "cliente": {
+    "nombre": "RCM COMERCIALIZADORA SPA",
+    "rut": "77.725.407-3",
+    "direccion": "QUETRAHUE LT A 1 SANTA ROSA BULNES",
+    "comuna": "BULNES",
+    "condicion": "CONTADO",
+    "telefono": "979255496",
+    "observacion": "Efectivo o transferencia. Facturación Masiva Ticket #52946"
+  },
+  "venta": {
+    "fecha": "07-05-2025",
+    "vendedor": "LUIS ORTEGA-T",
+    "telefono_vendedor": "+56 9 64483375"
+  },
+  "datos_bancarios": [
+    {
+      "nro_cta_cte": "225 561 340 4",
+      "banco": "CHILE",
+      "rut": "77.171.114-6",
+      "nombre": "DISTRIBUIDORA EL TROPEZON",
+      "correo": "distribuidoraeltrapezon@gmail.com"
+    },
+    {
+      "nro_cta_cte": "533 004 277 71",
+      "banco": "ESTADO",
+      "rut": "11.899.955-K",
+      "nombre": "CRISTOBAL RIOS GARCES",
+      "nota": "PAGO 40989"
+    }
+  ],
+  "items": [
+    {
+      "total_unidades": 6,
+      "descripcion": "EXP. SELECTO MERLOT BOT. 1500 X6",
+      "cajas": 1.0,
+      "total_bruto": 19022,
+      "precio_unitario": 3170
+    },
+    {
+      "total_unidades": 3,
+      "descripcion": "MISIONES VAR. CAB. SAUV. 750 X12",
+      "cajas": 0.3,
+      "total_bruto": 8280,
+      "precio_unitario": 2760
+    },
+    {
+      "total_unidades": 2,
+      "descripcion": "MISIONES VAR. MERLOT 750 X12",
+      "cajas": 0.2,
+      "total_bruto": 5520,
+      "precio_unitario": 2760
+    },
+    {
+      "total_unidades": 2,
+      "descripcion": "CASILLERO DD.RVA CAB SAUV. 750X12",
+      "cajas": 0.2,
+      "total_bruto": 8182,
+      "precio_unitario": 4091
+    },
+    {
+      "total_unidades": 8,
+      "descripcion": "GATO MERLOT BOT. 1500 X8",
+      "cajas": 1.0,
+      "total_bruto": 27687,
+      "precio_unitario": 3461
+    },
+    {
+      "total_unidades": 2,
+      "descripcion": "MISIONES VAR. CARMENERE 750 X12",
+      "cajas": 0.2,
+      "total_bruto": 5520,
+      "precio_unitario": 2760
+    },
+    {
+      "total_unidades": 3,
+      "descripcion": "APEROL APERITIVO 750CC - 11 GDS.",
+      "cajas": 0.5,
+      "total_bruto": 26770,
+      "precio_unitario": 8923
+    },
+    {
+      "total_unidades": 1,
+      "descripcion": "PROMO RAMAZZOTTI 15 750ML X 6 CJ1",
+      "cajas": 1.0,
+      "total_bruto": 58920,
+      "precio_unitario": 58920
+    },
+    {
+      "total_unidades": 3,
+      "descripcion": "CACAO MITIANS 750 25G. X6",
+      "cajas": 0.5,
+      "total_bruto": 12582,
+      "precio_unitario": 4194
+    }
+  ],
+  "totales": {
+    "total_bruto": 172483
+  },
+  "pie_pagina": "NOTA DE VENTA CORRESPONDE AL TICKET N° 52946"
+}
