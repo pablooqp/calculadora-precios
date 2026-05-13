@@ -541,11 +541,14 @@ function guardarFactura() {
   };
 
   mainRows.forEach((row) => {
+    const id = row.id.split("-").pop();
+    const pvpInput = document.getElementById(`det-venta-sugerida-${id}`);
     const producto = {
       nombre: row.querySelector('input[placeholder="Nombre..."]').value,
       cantidad: parseFloat(row.querySelector(".cantidad").value) || 0,
       netoTotal: parseFloat(row.querySelector(".neto-total").value) || 0,
       ilaTipo: parseFloat(row.querySelector(".ila-tipo").value) || 0,
+      pvp: pvpInput ? (parseFloat(pvpInput.value) || 0) : 0,
       margen: parseFloat(row.querySelector(".margen-producto").value) || 0,
     };
     factura.productos.push(producto);
@@ -699,6 +702,19 @@ function editarFactura(index) {
     }
   });
   calcularTodo();
+
+  // Restaurar PVP guardados y recalcular margen desde PVP
+  const allRows = tbody.querySelectorAll('tr[id^="fila-main-"]');
+  factura.productos.forEach((producto, i) => {
+    if (producto.pvp && allRows[i]) {
+      const id = allRows[i].id.split("-").pop();
+      const pvpInput = document.getElementById(`det-venta-sugerida-${id}`);
+      if (pvpInput) {
+        pvpInput.value = producto.pvp;
+        calcularDesdePVP(parseInt(id));
+      }
+    }
+  });
 }
 
 // Cargar facturas al iniciar

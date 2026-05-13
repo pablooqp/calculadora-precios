@@ -1,0 +1,33 @@
+{
+  "numeroFactura": "169822987",
+  "nombreEmpresa": "Comercial CCU",
+  "fechaFactura": "2025-09-14",
+  "nombre": "1669822987-CCU",
+  "fleteTotal": 7620,
+  "otrosCargos": 0,
+  "metodoFlete": "ccu",
+  "ivaSinILA": true,
+  "productos": [
+    {
+      "nombre": "GATO CAB. SAUV.",
+      "cantidad": 8,
+      "netoTotal": 16360,
+      "ilaTipo": 0.205,
+      "margen": 31.75
+    },
+    {
+      "nombre": "GATO MERLOT",
+      "cantidad": 8,
+      "netoTotal": 16360,
+      "ilaTipo": 0.205,
+      "margen": 31.75
+    },
+    {
+      "nombre": "GATO DULCE CHOCOLATE",
+      "cantidad": 8,
+      "netoTotal": 19449,
+      "ilaTipo": 0.205,
+      "margen": 21.94
+    }
+  ]
+}

@@ -13,6 +13,7 @@
       "cantidad": 8,
       "netoTotal": 18855,
       "ilaTipo": 0.205,
+      "pvp": 4850,
       "margen": 26.75
     },
     {
@@ -20,6 +21,7 @@
       "cantidad": 6,
       "netoTotal": 12954,
       "ilaTipo": 0.205,
+      "pvp": 4600,
       "margen": 29.25
     },
     {
@@ -27,6 +29,7 @@
       "cantidad": 6,
       "netoTotal": 37192,
       "ilaTipo": 0.315,
+      "pvp": 13899,
       "margen": 26.68
     },
     {
@@ -34,6 +37,7 @@
       "cantidad": 3,
       "netoTotal": 16898,
       "ilaTipo": 0.315,
+      "pvp": 12900,
       "margen": 28.21
     },
     {
@@ -41,6 +45,7 @@
       "cantidad": 3,
       "netoTotal": 7942,
       "ilaTipo": 0.315,
+      "pvp": 7500,
       "margen": 41.97
     },
     {
@@ -48,6 +53,7 @@
       "cantidad": 2,
       "netoTotal": 5572,
       "ilaTipo": 0.205,
+      "pvp": 5900,
       "margen": 28.82
     },
     {
@@ -55,6 +61,7 @@
       "cantidad": 2,
       "netoTotal": 3759,
       "ilaTipo": 0.205,
+      "pvp": 3900,
       "margen": 27.36
     },
     {
@@ -62,6 +69,7 @@
       "cantidad": 3,
       "netoTotal": 5639,
       "ilaTipo": 0.205,
+      "pvp": 3900,
       "margen": 27.35
     },
     {
@@ -69,6 +77,7 @@
       "cantidad": 2,
       "netoTotal": 3759,
       "ilaTipo": 0.205,
+      "pvp": 3900,
       "margen": 27.36
     }
   ]

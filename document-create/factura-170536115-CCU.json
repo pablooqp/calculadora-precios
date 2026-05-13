@@ -1,0 +1,19 @@
+{
+  "numeroFactura": "11144",
+  "nombreEmpresa": "ccu",
+  "fechaFactura": "2026-05-30",
+  "nombre": "170536115-CCU",
+  "fleteTotal": 1950,
+  "otrosCargos": 0,
+  "metodoFlete": "ccu",
+  "ivaSinILA": true,
+  "productos": [
+    {
+      "nombre": "MISTRAL ICE",
+      "cantidad": 24,
+      "netoTotal": 15632,
+      "ilaTipo": 0.315,
+      "margen": 34.34
+    }
+  ]
+}
