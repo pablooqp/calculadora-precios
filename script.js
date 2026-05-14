@@ -473,7 +473,6 @@ function calcularTodo(skipPvpId) {
   document.getElementById("rentVentaNeta").innerText = formatoDinero(rentSumaVentaNeta);
   document.getElementById("rentIvaSII").innerText = formatoDinero(rentSumaIvaPagar);
   document.getElementById("rentILATotal").innerText = formatoDinero(totales.totalILA);
-  document.getElementById("rentGananciaBruta").innerText = formatoDinero(rentSumaGananciaBruta);
   document.getElementById("rentGananciaNeta").innerText = formatoDinero(rentGananciaNeta);
   document.getElementById("rentGananciaUnidad").innerText = formatoDinero(rentGananciaUnidad);
   document.getElementById("rentROI").innerText = rentROI.toFixed(1) + "%";
