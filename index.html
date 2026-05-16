@@ -21,7 +21,21 @@
 
                 <!-- 3. Nombre de la Factura -->
                 <div class="bg-white p-6 card">
-                    <h2 class="text-xl font-semibold mb-4 text-indigo-700 border-b pb-2">Datos de la Factura</h2>
+                    <div class="flex justify-between items-center border-b pb-2 mb-4">
+                        <h2 class="text-xl font-semibold text-indigo-700">Datos de la Factura</h2>
+                        <div class="flex gap-2">
+                            <label class="cursor-pointer bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center transition shadow-sm">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                XML SII
+                                <input type="file" accept=".xml" onchange="importarXMLSII(event)" class="hidden">
+                            </label>
+                            <label class="cursor-pointer bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center transition shadow-sm">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                PDF Factura
+                                <input type="file" accept=".pdf" onchange="importarPDFFactura(event)" class="hidden">
+                            </label>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">N° Factura</label>
@@ -244,6 +258,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=9"></script>
 </body>
 </html>

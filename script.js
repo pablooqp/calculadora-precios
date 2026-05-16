@@ -632,6 +632,286 @@ function descargarFactura(index) {
   URL.revokeObjectURL(url);
 }
 
+function procesarXMLSII(xmlText) {
+  const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
+  if (xmlDoc.querySelector("parsererror")) {
+    alert("El archivo XML no es válido.");
+    return;
+  }
+  const encabezado = xmlDoc.getElementsByTagName("Encabezado")[0];
+  if (!encabezado) { alert("No se encontró estructura DTE válida en el XML."); return; }
+
+  const idDoc = encabezado.getElementsByTagName("IdDoc")[0];
+  const emisor = encabezado.getElementsByTagName("Emisor")[0];
+
+  const folio = idDoc?.getElementsByTagName("Folio")[0]?.textContent || "";
+  const fecha = idDoc?.getElementsByTagName("FchEmis")[0]?.textContent || "";
+  const razonSocial = emisor?.getElementsByTagName("RznSoc")[0]?.textContent || "Empresa no especificada";
+
+  document.getElementById("numeroFactura").value = folio;
+  document.getElementById("nombreEmpresa").value = razonSocial;
+  document.getElementById("fechaFactura").value = formatearFechaSII(fecha);
+  document.getElementById("nombreFactura").value = `${razonSocial} - Factura N°${folio}`;
+
+  const detalles = xmlDoc.getElementsByTagName("Detalle");
+  if (detalles.length === 0) { alert("No se encontraron productos en el XML."); return; }
+
+  const tbody = document.getElementById("cuerpoTabla");
+  tbody.innerHTML = "";
+  for (let i = 0; i < detalles.length; i++) {
+    const det = detalles[i];
+    const nombre = det.getElementsByTagName("NmbItem")[0]?.textContent || "Producto";
+    const qty = parseFloat(det.getElementsByTagName("QtyItem")[0]?.textContent) || 1;
+    const monto = parseFloat(det.getElementsByTagName("MontoItem")[0]?.textContent) || 0;
+
+    let ilaTipo = 0;
+    const impuestos = det.getElementsByTagName("ImptoRet");
+    for (let j = 0; j < impuestos.length; j++) {
+      const codImp = impuestos[j].getElementsByTagName("CodImp")[0]?.textContent;
+      if (codImp === "15" || codImp === "16") ilaTipo = 0.205;
+      else if (codImp === "17" || codImp === "18") ilaTipo = 0.315;
+    }
+
+    agregarFila();
+    const rows = tbody.querySelectorAll('tr[id^="fila-main-"]');
+    const lastRow = rows[rows.length - 1];
+    if (lastRow) {
+      lastRow.querySelector('input[placeholder="Nombre..."]').value = nombre;
+      lastRow.querySelector(".cantidad").value = qty;
+      lastRow.querySelector(".neto-total").value = monto;
+      if (ilaTipo > 0) lastRow.querySelector(".ila-tipo").value = ilaTipo;
+    }
+  }
+  calcularTodo();
+  alert(`Factura SII #${folio} importada exitosamente con ${detalles.length} producto(s).`);
+}
+
+function importarXMLSII(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) { procesarXMLSII(e.target.result); };
+  reader.readAsText(file);
+  event.target.value = "";
+}
+
+function formatearFechaSII(fechaStr) {
+  if (!fechaStr) return "";
+  const parts = fechaStr.split("-");
+  if (parts.length === 3 && parts[0].length === 4) return fechaStr;
+  if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  return fechaStr;
+}
+
+let pdfjsLib = null;
+async function cargarPDFjs() {
+  if (pdfjsLib) return pdfjsLib;
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    script.onload = () => {
+      pdfjsLib = window.pdfjsLib;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      resolve(pdfjsLib);
+    };
+    script.onerror = () => reject(new Error("No se pudo cargar PDF.js"));
+    document.head.appendChild(script);
+  });
+}
+
+async function importarPDFFactura(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const PDFLib = await cargarPDFjs();
+    const data = new Uint8Array(await file.arrayBuffer());
+    const pdf = await PDFLib.getDocument({ data }).promise;
+    let textoCompleto = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const lineasY = {};
+      content.items.forEach(item => {
+        const y = Math.round(item.transform[5]);
+        if (!lineasY[y]) lineasY[y] = [];
+        lineasY[y].push(item.str);
+      });
+      const ys = Object.keys(lineasY).map(Number).sort((a, b) => b - a);
+      ys.forEach(y => { textoCompleto += lineasY[y].join(" ") + "\n"; });
+    }
+
+    const datos = parsearTextoFactura(textoCompleto);
+    if (!datos.productos || datos.productos.length === 0) {
+      alert("No se pudieron extraer productos del PDF. Revisá que el archivo sea una factura válida.");
+      return;
+    }
+
+    const xmlStr = generarXMLdesdePDF(datos);
+    procesarXMLSII(xmlStr);
+
+    document.getElementById("fleteTotal").value = datos.fleteTotal;
+    document.getElementById("otrosCargos").value = datos.otrosCargos;
+    calcularTodo();
+  } catch (err) {
+    alert("Error al leer el PDF: " + err.message);
+  }
+  event.target.value = "";
+}
+
+const MESES_ES = {enero:"01",febrero:"02",marzo:"03",abril:"04",mayo:"05",junio:"06",julio:"07",agosto:"08",septiembre:"09",octubre:"10",noviembre:"11",diciembre:"12"};
+
+function parsearTextoFactura(texto) {
+  const lineas = texto.split("\n").map(l => l.trim()).filter(l => l);
+  const textoPlano = lineas.join(" ");
+
+  const rucRut = textoPlano.match(/(\d{1,2}(?:\.\d{3}){2}-[\dkK])/);
+  const folioMatch = textoPlano.match(/N[º°]\s*(\d+)/i) || textoPlano.match(/Folio[:\s]*(\d+)/i) || textoPlano.match(/N[uú]mero[:\s]*(\d+)/i) || textoPlano.match(/(\d{6,})/);
+
+  let fechaFactura = "";
+  const fechaESPatt = /(\d{1,2})\s+de\s+([a-záéíóúñ]+)\s+del?\s+(\d{4})/i;
+  const fechaESMatch = textoPlano.match(fechaESPatt);
+  if (fechaESMatch) {
+    const mes = MESES_ES[fechaESMatch[2].toLowerCase()] || "01";
+    fechaFactura = `${fechaESMatch[3]}-${mes}-${fechaESMatch[1].padStart(2,"0")}`;
+  } else {
+    const fechaMatch = textoPlano.match(/(\d{2})[\/-](\d{2})[\/-](\d{4})/) || textoPlano.match(/(\d{4})[\/-](\d{2})[\/-](\d{2})/);
+    if (fechaMatch) {
+      fechaFactura = fechaMatch[1].length === 4 ? `${fechaMatch[1]}-${fechaMatch[2]}-${fechaMatch[3]}` : `${fechaMatch[3]}-${fechaMatch[2]}-${fechaMatch[1]}`;
+    }
+  }
+
+  let nombreEmpresa = "";
+  for (let i = 1; i < lineas.length; i++) {
+    if (/^Giro/i.test(lineas[i])) { nombreEmpresa = lineas[i - 1]; break; }
+  }
+  if (!nombreEmpresa || nombreEmpresa.length < 5) {
+    const rznMatch = textoPlano.match(/Raz[\s]*[oó]n Social[:\s]*([A-Za-záéíóúñÑÁÉÍÓÚ][A-Za-záéíóúñÑÁÉÍÓÚ\s&,\.]+?)(?=\s+RUT|\s+Direcci[oó]n|\s+Giro|\s+Folio|\d{7,})/i);
+    if (rznMatch) nombreEmpresa = rznMatch[1].trim();
+  }
+  if (!nombreEmpresa || nombreEmpresa.length < 5) {
+    for (const l of lineas) {
+      if (/^[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s\.]{3,}(SPA|LTDA|S\.?A\.?|EIRL|LIMITADA)/i.test(l) && l.length > 5) {
+        nombreEmpresa = l; break;
+      }
+    }
+  }
+  if (!nombreEmpresa || nombreEmpresa.length < 5) {
+    nombreEmpresa = lineas[0] ? lineas[0].replace(/^(R\.?U\.?T\.?[:\s]*[\d.,-]+\s*)?/, "").trim() : "";
+  }
+  if (!nombreEmpresa || nombreEmpresa.length < 3) nombreEmpresa = "Empresa desde PDF";
+
+  let numeroFactura = folioMatch ? folioMatch[1] : "";
+  const nombreFactura = `${nombreEmpresa}${numeroFactura ? " - Factura N°" + numeroFactura : ""}`;
+
+  let fleteTotal = 0;
+  const costoLogMatch = textoPlano.match(/Costo\s*Logistico\s*\$?\s*([\d.,]+)/i);
+  if (costoLogMatch) fleteTotal = parsearNumeroCL(costoLogMatch[1]);
+  for (const l of lineas) {
+    if (/\bflete\b/i.test(l) && !costoLogMatch) {
+      const nums = [...l.matchAll(/[\d.,]+/g)].filter(m => !(m[0].length === 1 && (m[0] === '.' || m[0] === ',')));
+      if (nums.length > 0) { fleteTotal = parsearNumeroCL(nums[nums.length - 1][0]); break; }
+    }
+  }
+  const fleteMatch = textoPlano.match(/Flete[:\s]*\$?\s*([\d.,]+)/i);
+  if (fleteMatch && fleteTotal === 0) fleteTotal = parsearNumeroCL(fleteMatch[1]);
+
+  let otrosCargos = 0;
+  const cargoMatch = textoPlano.match(/(?:Otros[:\s]*|Cargos?[:\s]*)\$?\s*([\d.,]+)/i);
+  if (cargoMatch) otrosCargos = parsearNumeroCL(cargoMatch[1]);
+
+  const productos = extraerProductosPDF(lineas, textoPlano);
+  return { numeroFactura, nombreEmpresa, fechaFactura, nombreFactura, fleteTotal, otrosCargos, productos };
+}
+
+function extraerProductosPDF(lineas, textoPlano) {
+  const productos = [];
+  const numPatt = /[\d.,]+/g;
+  const skuPatt = /^[A-Za-z]+[\d]+[-][A-Za-z0-9]+\s*/;
+
+  for (let i = 0; i < lineas.length; i++) {
+    const l = lineas[i].trim();
+    if (!l || l.length < 10) continue;
+    if (/Neto[:\s]|IVA[:\s]|Total[:\s]|SubTotal|MONTO NETO|Costo Logistico|Timbre|Codigo Descripcion|Adic/i.test(l)) continue;
+    if (/\bflete\b/i.test(l)) continue;
+
+    const rawMatches = [...l.matchAll(numPatt)];
+    const matches = rawMatches.filter(m => !(m[0].length === 1 && (m[0] === '.' || m[0] === ',')));
+    if (matches.length < 5) continue;
+
+    const ultimoConComma = matches.reduce((last, m, idx) => m[0].includes(',') ? idx : last, -1);
+
+    let qtyMatch, totalMatch, taxMatch;
+
+    if (ultimoConComma >= 2) {
+      taxMatch = matches[ultimoConComma];
+      qtyMatch = matches[ultimoConComma - 2];
+    } else {
+      qtyMatch = matches[matches.length - 5];
+      const rawPct = matches[matches.length - 3][0];
+      const cand1 = parsearNumeroCL(rawPct);
+      const cand2 = rawPct.includes('.') && !rawPct.includes(',') ? parseFloat(rawPct) : 0;
+      if ((cand1 > 0 && cand1 < 50) || (cand2 > 0 && cand2 < 50)) taxMatch = matches[matches.length - 3];
+    }
+    totalMatch = matches[matches.length - 1];
+
+    const qty = parseInt(qtyMatch[0]) || 1;
+    const totalVal = parsearNumeroCL(totalMatch[0]);
+
+    let nombre = l.substring(0, qtyMatch.index).trim();
+    nombre = nombre.replace(skuPatt, "").trim();
+    nombre = nombre.replace(/^[^A-Za-záéíóúñÑÁÉÍÓÚ]+/, "").trim();
+    nombre = nombre.replace(/\s+/g, " ");
+    if (nombre.length < 3) continue;
+
+    let ilaTipo = 0;
+    if (taxMatch) {
+      const raw = taxMatch[0];
+      let pct = parsearNumeroCL(raw);
+      if (raw.includes('.') && !raw.includes(',')) {
+        const dec = parseFloat(raw);
+        if (dec > 0 && dec < 100) pct = dec;
+      }
+      if ([20.5, 31.5].includes(pct)) ilaTipo = pct === 31.5 ? 0.315 : 0.205;
+    }
+
+    productos.push({
+      nombre: nombre.substring(0, 80),
+      cantidad: Math.round(qty) || 1,
+      netoTotal: Math.round(totalVal),
+      ilaTipo,
+      margen: 30
+    });
+  }
+  return productos;
+}
+
+function parsearNumeroCL(str) {
+  if (!str) return 0;
+  let s = String(str).trim();
+  s = s.includes(",") ? s.replace(/\./g, "").replace(",", ".") : s.replace(/\./g, "");
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function generarXMLdesdePDF(datos) {
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<DTE xmlns="http://www.sii.cl/SiiDte">\n  <Documento>\n    <Encabezado>\n      <IdDoc>\n        <TipoDTE>33</TipoDTE>\n        <Folio>${escXML(datos.numeroFactura || "0")}</Folio>\n        <FchEmis>${escXML(datos.fechaFactura || "2000-01-01")}</FchEmis>\n      </IdDoc>\n      <Emisor>\n        <RznSoc>${escXML(datos.nombreEmpresa || "Empresa")}</RznSoc>\n      </Emisor>\n    </Encabezado>\n`;
+  datos.productos.forEach(p => {
+    xml += `    <Detalle>\n      <NmbItem>${escXML(p.nombre)}</NmbItem>\n      <QtyItem>${p.cantidad}</QtyItem>\n      <MontoItem>${p.netoTotal}</MontoItem>\n`;
+    if (p.ilaTipo === 0.205) {
+      xml += `      <ImptoRet><CodImp>15</CodImp><TasaImp>20.5</TasaImp></ImptoRet>\n`;
+    } else if (p.ilaTipo === 0.315) {
+      xml += `      <ImptoRet><CodImp>17</CodImp><TasaImp>31.5</TasaImp></ImptoRet>\n`;
+    }
+    xml += `    </Detalle>\n`;
+  });
+  xml += `  </Documento>\n</DTE>`;
+  return xml;
+}
+
+function escXML(str) {
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function importarFactura(event) {
   const file = event.target.files[0];
   if (!file) return;
