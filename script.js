@@ -140,7 +140,7 @@ function agregarFila() {
                             <span id="det-flete-unit-${rowId}">$0</span>
                         </div>
                         <div class="flex justify-between text-orange-600">
-                            <span>ILA Pagado en Compra:</span>
+                            <span>Impuesto Pagado en Compra:</span>
                             <span id="det-ila-pago-${rowId}">$0</span>
                         </div>
                         <div class="flex justify-between text-blue-500">
@@ -174,7 +174,7 @@ function agregarFila() {
                     <div class="text-[11px] space-y-1">
                         <span class="text-[9px] uppercase font-bold text-gray-400 block mb-1">Análisis de Venta Minorista</span>
                         <div class="flex justify-between">
-                            <span class="text-gray-500">Valor Neto Compra (Neto+Log+ILA):</span>
+                            <span class="text-gray-500">Valor Neto Compra (Neto+Log+Imp.):</span>
                             <span id="det-costo-reposicion-${rowId}">$0</span>
                         </div>
                         <div class="flex justify-between">
@@ -361,6 +361,8 @@ function calcularTodo(skipPvpId) {
   let rentSumaVentaNeta = 0;
   let rentSumaGananciaBruta = 0;
   let rentSumaIvaPagar = 0;
+  let rentPesoTotal = 0;
+  let rentCantTotal = 0;
 
   mainRows.forEach((row) => {
     const id = row.id.split("-").pop();
@@ -374,6 +376,9 @@ function calcularTodo(skipPvpId) {
     const netoUnitario = cant > 0 ? netoTotalLinea / cant : 0;
     row.querySelector(".neto-unitario-display").value =
       formatoDinero(netoUnitario);
+
+    const nombre = row.querySelector('input[placeholder="Nombre..."]')?.value || "";
+    if (cant !== Math.floor(cant)) rentPesoTotal += cant; else rentCantTotal += cant;
 
     if (cant > 0) {
       const logisticaUnitario = calcularLogisticaUnitario(netoUnitario, cant, netoTotalLinea, tasaILA, totales);
@@ -470,7 +475,8 @@ function calcularTodo(skipPvpId) {
   const rentROI = granTotalFactura > 0 ? (rentGananciaNeta / granTotalFactura) * 100 : 0;
   const rentMargenProm = rentSumaVentaNeta > 0 ? (rentSumaGananciaBruta / rentSumaVentaNeta) * 100 : 0;
 
-  document.getElementById("rentCantProductos").innerText = rentTotalUnidades + " uds.";
+  document.getElementById("rentCantUnitarios").innerText = rentCantTotal + " uds.";
+  document.getElementById("rentCantPesados").innerText = rentPesoTotal.toFixed(3).replace(/\.?0+$/, "") + " kg";
   document.getElementById("rentInversion").innerText = formatoDinero(granTotalFactura);
   document.getElementById("rentCostoReposicion").innerText = formatoDinero(rentSumaCostoReposicion);
   document.getElementById("rentVentaTotal").innerText = formatoDinero(rentSumaVentaPVP);
@@ -838,7 +844,7 @@ function parsearTextoFactura(texto) {
 function extraerProductosPDF(lineas, textoPlano) {
   const productos = [];
   const numPatt = /[\d.,]+/g;
-  const skuPatt = /^[A-Za-z0-9]+[-][A-Za-z0-9]+\s*/;
+  const skuPatt = /^[A-Za-z0-9]+(?:[-][A-Za-z0-9]+)+\s*/;
 
   for (let i = 0; i < lineas.length; i++) {
     const l = lineas[i].trim();
@@ -861,11 +867,14 @@ function extraerProductosPDF(lineas, textoPlano) {
     } else if (ultimoConComma >= 1) {
       qtyMatch = matches[ultimoConComma - 1];
     } else if (matches.length >= 5) {
-      qtyMatch = matches[matches.length - 5];
       const rawPct = matches[matches.length - 3][0];
-      const cand1 = parsearNumeroCL(rawPct);
-      const cand2 = rawPct.includes('.') && !rawPct.includes(',') ? parseFloat(rawPct) : 0;
-      if ((cand1 > 0 && cand1 < 50) || (cand2 > 0 && cand2 < 50)) taxMatch = matches[matches.length - 3];
+      const esTaxSinComma = rawPct.includes('.') || rawPct === "10" || rawPct === "18";
+      if (esTaxSinComma) {
+        qtyMatch = matches[matches.length - 5];
+        taxMatch = matches[matches.length - 3];
+      } else {
+        qtyMatch = matches[matches.length - 3];
+      }
     } else {
       qtyMatch = matches[1];
     }
