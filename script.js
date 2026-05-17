@@ -98,9 +98,11 @@ function agregarFila() {
         </td>
         <td class="p-2" data-label="ILA">
             <select class="w-full p-2 border-gray-200 border rounded-md ila-tipo text-xs" onchange="calcularTodo()">
-                <option value="0">Sin ILA</option>
-                <option value="0.205">Vino/Cer. (20,5%)</option>
-                <option value="0.315">Destilado (31,5%)</option>
+                <option value="0">Sin Impuesto</option>
+                <option value="0.205">ILA Vino/Cer. (20,5%)</option>
+                <option value="0.315">ILA Destilado (31,5%)</option>
+                <option value="0.1">IABA (10%)</option>
+                <option value="0.18">IABA (18%)</option>
             </select>
         </td>
         <td class="p-2" data-label="Margen %">
@@ -315,6 +317,7 @@ function calcularTotalesFactura() {
   let sumaNetosFactura = 0;
   let sumaILAVino = 0;
   let sumaILADestilado = 0;
+  let sumaIABA = 0;
   let sumaBrutosTeoricos = 0;
 
   const ivaSinILA = document.getElementById('ivaSinILA').checked;
@@ -326,13 +329,14 @@ function calcularTotalesFactura() {
     const ilaLinea = netoTotalLinea * tasaILA;
     if (tasaILA === 0.205) sumaILAVino += ilaLinea;
     else if (tasaILA === 0.315) sumaILADestilado += ilaLinea;
+    else if (tasaILA === 0.1 || tasaILA === 0.18) sumaIABA += ilaLinea;
     sumaBrutosTeoricos += ivaSinILA
       ? netoTotalLinea * (1.19 + tasaILA)
       : netoTotalLinea * (1 + tasaILA) * 1.19;
   });
 
   const subtotalNetoFactura = sumaNetosFactura + fleteTotal + otrosCargos;
-  const totalILA = sumaILAVino + sumaILADestilado;
+  const totalILA = sumaILAVino + sumaILADestilado + sumaIABA;
   const totalIVAFactura = ivaSinILA
     ? subtotalNetoFactura * 0.19
     : (subtotalNetoFactura + totalILA) * 0.19;
@@ -340,7 +344,7 @@ function calcularTotalesFactura() {
 
   return {
     fleteTotal, otrosCargos, mainRows,
-    sumaNetosFactura, sumaILAVino, sumaILADestilado,
+    sumaNetosFactura, sumaILAVino, sumaILADestilado, sumaIABA,
     sumaBrutosTeoricos, subtotalNetoFactura, totalILA,
     totalIVAFactura, granTotalFactura, ivaSinILA
   };
@@ -484,6 +488,7 @@ function calcularTodo(skipPvpId) {
   document.getElementById("resILAVino").innerText = formatoDinero(totales.sumaILAVino);
   document.getElementById("resILADestilado").innerText =
     formatoDinero(totales.sumaILADestilado);
+  document.getElementById("resIABA").innerText = formatoDinero(totales.sumaIABA);
   document.getElementById("resILA").innerText = formatoDinero(totales.totalILA);
   document.getElementById("resIVA").innerText = formatoDinero(totales.totalIVAFactura);
   document.getElementById("resTotal").innerText =
@@ -555,22 +560,24 @@ function guardarFactura() {
 
   const facturasGuardadas = JSON.parse(localStorage.getItem("facturas")) || [];
 
-  if (facturaEnEdicion !== null) {
-    // Sobrescribir la factura en edición
-    facturasGuardadas[facturaEnEdicion] = factura;
+  let idx = facturaEnEdicion;
+  if (idx !== null) {
+    facturasGuardadas[idx] = factura;
     alert("Factura actualizada exitosamente.");
   } else {
-    // Agregar una nueva factura
     facturasGuardadas.push(factura);
+    idx = facturasGuardadas.length - 1;
     alert("Factura guardada exitosamente.");
   }
 
   localStorage.setItem("facturas", JSON.stringify(facturasGuardadas));
   cargarFacturas();
 
-  // Preguntar si desea limpiar después de guardar
   if (confirm("¿Desea limpiar los datos después de guardar?")) {
+    facturaEnEdicion = null;
     limpiar();
+  } else {
+    facturaEnEdicion = idx;
   }
 }
 
@@ -670,6 +677,11 @@ function procesarXMLSII(xmlText) {
       const codImp = impuestos[j].getElementsByTagName("CodImp")[0]?.textContent;
       if (codImp === "15" || codImp === "16") ilaTipo = 0.205;
       else if (codImp === "17" || codImp === "18") ilaTipo = 0.315;
+      else {
+        const tasa = impuestos[j].getElementsByTagName("TasaImp")[0]?.textContent;
+        if (tasa === "10") ilaTipo = 0.1;
+        else if (tasa === "18") ilaTipo = 0.18;
+      }
     }
 
     agregarFila();
@@ -826,7 +838,7 @@ function parsearTextoFactura(texto) {
 function extraerProductosPDF(lineas, textoPlano) {
   const productos = [];
   const numPatt = /[\d.,]+/g;
-  const skuPatt = /^[A-Za-z]+[\d]+[-][A-Za-z0-9]+\s*/;
+  const skuPatt = /^[A-Za-z0-9]+[-][A-Za-z0-9]+\s*/;
 
   for (let i = 0; i < lineas.length; i++) {
     const l = lineas[i].trim();
@@ -836,25 +848,31 @@ function extraerProductosPDF(lineas, textoPlano) {
 
     const rawMatches = [...l.matchAll(numPatt)];
     const matches = rawMatches.filter(m => !(m[0].length === 1 && (m[0] === '.' || m[0] === ',')));
-    if (matches.length < 5) continue;
+    if (matches.length < 4) continue;
 
     const ultimoConComma = matches.reduce((last, m, idx) => m[0].includes(',') ? idx : last, -1);
 
     let qtyMatch, totalMatch, taxMatch;
 
-    if (ultimoConComma >= 2) {
+    const esILA = ultimoConComma >= 0 && parsearNumeroCL(matches[ultimoConComma][0]) < 100;
+    if (esILA && ultimoConComma >= 2) {
       taxMatch = matches[ultimoConComma];
       qtyMatch = matches[ultimoConComma - 2];
-    } else {
+    } else if (ultimoConComma >= 1) {
+      qtyMatch = matches[ultimoConComma - 1];
+    } else if (matches.length >= 5) {
       qtyMatch = matches[matches.length - 5];
       const rawPct = matches[matches.length - 3][0];
       const cand1 = parsearNumeroCL(rawPct);
       const cand2 = rawPct.includes('.') && !rawPct.includes(',') ? parseFloat(rawPct) : 0;
       if ((cand1 > 0 && cand1 < 50) || (cand2 > 0 && cand2 < 50)) taxMatch = matches[matches.length - 3];
+    } else {
+      qtyMatch = matches[1];
     }
     totalMatch = matches[matches.length - 1];
 
-    const qty = parseInt(qtyMatch[0]) || 1;
+    const qtyRaw = qtyMatch[0];
+    const qtyDecimal = qtyRaw.includes('.') || qtyRaw.includes(',') ? parseFloat(qtyRaw.replace(',','.')) : parseInt(qtyRaw);
     const totalVal = parsearNumeroCL(totalMatch[0]);
 
     let nombre = l.substring(0, qtyMatch.index).trim();
@@ -863,7 +881,12 @@ function extraerProductosPDF(lineas, textoPlano) {
     nombre = nombre.replace(/\s+/g, " ");
     if (nombre.length < 3) continue;
 
-    let ilaTipo = 0;
+    if (!taxMatch && ultimoConComma >= 0 && !esILA && matches.length - ultimoConComma === 3) {
+      const v = parsearNumeroCL(matches[ultimoConComma + 1][0]);
+      if (v === 10 || v === 18) taxMatch = matches[ultimoConComma + 1];
+    }
+
+    let taxPct = 0, taxType = "";
     if (taxMatch) {
       const raw = taxMatch[0];
       let pct = parsearNumeroCL(raw);
@@ -871,14 +894,16 @@ function extraerProductosPDF(lineas, textoPlano) {
         const dec = parseFloat(raw);
         if (dec > 0 && dec < 100) pct = dec;
       }
-      if ([20.5, 31.5].includes(pct)) ilaTipo = pct === 31.5 ? 0.315 : 0.205;
+      if ([20.5, 31.5].includes(pct)) { taxPct = pct === 31.5 ? 0.315 : 0.205; taxType = "ILA"; }
+      else if (pct === 10 || pct === 18) { taxPct = pct / 100; taxType = "IABA"; }
     }
 
     productos.push({
       nombre: nombre.substring(0, 80),
-      cantidad: Math.round(qty) || 1,
+      cantidad: Math.round(qtyDecimal * 1000) / 1000 || 1,
       netoTotal: Math.round(totalVal),
-      ilaTipo,
+      ilaTipo: taxPct,
+      taxType,
       margen: 30
     });
   }
@@ -901,6 +926,9 @@ function generarXMLdesdePDF(datos) {
       xml += `      <ImptoRet><CodImp>15</CodImp><TasaImp>20.5</TasaImp></ImptoRet>\n`;
     } else if (p.ilaTipo === 0.315) {
       xml += `      <ImptoRet><CodImp>17</CodImp><TasaImp>31.5</TasaImp></ImptoRet>\n`;
+    } else if (p.taxType === "IABA") {
+      const tasa = Math.round(p.ilaTipo * 100);
+      xml += `      <ImptoRet><TasaImp>${tasa}</TasaImp></ImptoRet>\n`;
     }
     xml += `    </Detalle>\n`;
   });
@@ -910,6 +938,70 @@ function generarXMLdesdePDF(datos) {
 
 function escXML(str) {
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+const PESO_PATTERNS = [/kilo/i, /kg\b/i, /granel/i, /\bgrs?\b/i, /gramos/i, /deshuesad/i, /entero/i, /pechuga/i, /trutro/i, /lomo/i, /posta/i, /asado/i, /sobrecostilla/i, /\d+grs?\b/i, /chorizo/i, /mani/i];
+
+function analizarProductosPesados() {
+  const tbody = document.getElementById("cuerpoTabla");
+  const mainRows = tbody.querySelectorAll('tr[id^="fila-main-"]');
+  const numFactura = document.getElementById("numeroFactura").value || "S/N";
+  const fecha = document.getElementById("fechaFactura").value || "";
+  const fechaFormateada = fecha ? fecha.split("-").reverse().join("/") : "";
+
+  const pesados = [], unitarios = [];
+  let total = 0;
+
+  mainRows.forEach(row => {
+    const nombre = row.querySelector('input[placeholder="Nombre..."]')?.value || "";
+    const cant = parseFloat(row.querySelector(".cantidad")?.value) || 0;
+    const neto = parseFloat(row.querySelector(".neto-total")?.value) || 0;
+    const codigo = "";
+    total++;
+
+    const tieneDecimales = cant !== Math.floor(cant);
+    const keywordMatch = PESO_PATTERNS.some(p => p.test(nombre));
+    const esPesado = tieneDecimales || keywordMatch;
+
+    const item = { codigo, descripcion: nombre, cantidad: cant, valor_total: neto };
+
+    if (esPesado) {
+      const motivos = [];
+      if (tieneDecimales) motivos.push("Cantidad con decimales (" + cant + ")");
+      if (keywordMatch) {
+        const kw = PESO_PATTERNS.find(p => p.test(nombre));
+        motivos.push("Palabra clave '" + kw.source.replace(/\\/g, "").replace(/i$/, "").toUpperCase() + "'");
+      }
+      pesados.push({ ...item, unidad_medida: "KILO", motivo_clasificacion: motivos.join(" + ") });
+    } else {
+      unitarios.push({ ...item, unidad_medida: "UDS" });
+    }
+  });
+
+  const resultado = {
+    factura_numero: numFactura,
+    fecha: fechaFormateada,
+    productos_pesados: pesados,
+    productos_unitarios: unitarios,
+    resumen: { total_productos: total, productos_pesados_identificados: pesados.length, productos_unitarios_identificados: unitarios.length }
+  };
+
+  const msg = [
+    "=== ANÁLISIS DE PRODUCTOS ===\n",
+    "Factura N°: " + numFactura,
+    "Fecha: " + fechaFormateada,
+    "",
+    "--- PRODUCTOS PESADOS (" + pesados.length + ") ---",
+  ];
+  if (pesados.length === 0) msg.push("  (ninguno)");
+  pesados.forEach(p => msg.push("  • " + p.descripcion + " - " + p.cantidad + " " + p.unidad_medida + " ($" + p.valor_total + ")"));
+  msg.push("", "--- PRODUCTOS UNITARIOS (" + unitarios.length + ") ---");
+  unitarios.forEach(p => msg.push("  • " + p.descripcion + " - " + p.cantidad + " " + p.unidad_medida + " ($" + p.valor_total + ")"));
+  msg.push("", "Resumen: " + pesados.length + " pesados, " + unitarios.length + " unitarios de " + total + " totales");
+
+  console.log(msg.join("\n"));
+  console.log("JSON:", JSON.stringify(resultado, null, 2));
+  alert(msg.join("\n"));
 }
 
 function importarFactura(event) {
