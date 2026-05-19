@@ -1,6 +1,11 @@
 let rowCount = 0;
 let facturaEnEdicion = null; // Variable para rastrear si se está editando una factura
 let productosCache = [];
+let esFacturaTabaco = false;
+let montoRetencionTabaco = 0;
+let siiNetoDeclarado = 0;
+let siiIVADeclarado = 0;
+let siiTotalDeclarado = 0;
 
 async function cargarProductos() {
   try {
@@ -364,6 +369,9 @@ function calcularTodo(skipPvpId) {
   let rentPesoTotal = 0;
   let rentCantTotal = 0;
 
+  const esFacturaTabacoFlag = document.getElementById('esFacturaTabaco')?.checked || false;
+  esFacturaTabaco = esFacturaTabacoFlag;
+
   mainRows.forEach((row) => {
     const id = row.id.split("-").pop();
     const cant = parseFloat(row.querySelector(".cantidad").value) || 0;
@@ -378,7 +386,7 @@ function calcularTodo(skipPvpId) {
       formatoDinero(netoUnitario);
 
     const nombre = row.querySelector('input[placeholder="Nombre..."]')?.value || "";
-    if (cant !== Math.floor(cant)) rentPesoTotal += cant; else rentCantTotal += cant;
+    if (!esFacturaTabacoFlag && cant !== Math.floor(cant)) rentPesoTotal += cant; else rentCantTotal += cant;
 
     if (cant > 0) {
       const logisticaUnitario = calcularLogisticaUnitario(netoUnitario, cant, netoTotalLinea, tasaILA, totales);
@@ -489,16 +497,45 @@ function calcularTodo(skipPvpId) {
   document.getElementById("rentMargenProm").innerText = rentMargenProm.toFixed(1) + "%";
 
   // === Actualizar Resumen Factura ===
-  document.getElementById("resNeto").innerText =
-    formatoDinero(totales.subtotalNetoFactura);
+  const netoAMostrar = siiNetoDeclarado || totales.subtotalNetoFactura;
+  const ivaAMostrar = siiIVADeclarado || totales.totalIVAFactura;
+  const totalAMostrar = siiTotalDeclarado || totales.granTotalFactura;
+
+  document.getElementById("resNeto").innerText = formatoDinero(netoAMostrar);
   document.getElementById("resILAVino").innerText = formatoDinero(totales.sumaILAVino);
   document.getElementById("resILADestilado").innerText =
     formatoDinero(totales.sumaILADestilado);
   document.getElementById("resIABA").innerText = formatoDinero(totales.sumaIABA);
   document.getElementById("resILA").innerText = formatoDinero(totales.totalILA);
-  document.getElementById("resIVA").innerText = formatoDinero(totales.totalIVAFactura);
-  document.getElementById("resTotal").innerText =
-    formatoDinero(totales.granTotalFactura);
+  document.getElementById("resIVA").innerText = formatoDinero(ivaAMostrar);
+  document.getElementById("resTotal").innerText = formatoDinero(totalAMostrar);
+
+  const filaRet = document.getElementById("filaRetencionResumen");
+  const notaTab = document.getElementById("notaTabaco");
+  if (filaRet) {
+    if (esFacturaTabacoFlag && montoRetencionTabaco > 0) {
+      filaRet.classList.remove("hidden");
+      document.getElementById("resRetencion").innerText = formatoDinero(montoRetencionTabaco);
+      console.log("[Sidebar] Retención visible:", montoRetencionTabaco, "| Checkbox:", esFacturaTabacoFlag);
+    } else {
+      filaRet.classList.add("hidden");
+    }
+  }
+  if (notaTab) {
+    notaTab.style.display = esFacturaTabacoFlag ? "block" : "none";
+  }
+
+  const formulaEl = document.getElementById("resFormula");
+  const formulaTexto = document.getElementById("resFormulaTexto");
+  if (formulaEl && formulaTexto) {
+    formulaEl.classList.remove("hidden");
+    const ret = (esFacturaTabacoFlag && montoRetencionTabaco > 0) ? montoRetencionTabaco : 0;
+    if (ret > 0) {
+      formulaTexto.innerText = `${formatoDinero(netoAMostrar)} + ${formatoDinero(ivaAMostrar)} + ${formatoDinero(ret)} (ret.) = ${formatoDinero(netoAMostrar + ivaAMostrar + ret)}`;
+    } else {
+      formulaTexto.innerText = `${formatoDinero(netoAMostrar)} + ${formatoDinero(ivaAMostrar)} = ${formatoDinero(netoAMostrar + ivaAMostrar)}`;
+    }
+  }
 }
 
 function limpiar() {
@@ -506,6 +543,12 @@ function limpiar() {
   document.getElementById("otrosCargos").value = 0;
   document.getElementById("metodoFlete").value = "proporcional";
   document.getElementById("ivaSinILA").checked = false;
+  document.getElementById("esFacturaTabaco").checked = false;
+  esFacturaTabaco = false;
+  montoRetencionTabaco = 0;
+  siiNetoDeclarado = 0;
+  siiIVADeclarado = 0;
+  siiTotalDeclarado = 0;
   document.getElementById("cuerpoTabla").innerHTML = "";
   document.getElementById("nombreFactura").value = "";
   document.getElementById("numeroFactura").value = "";
@@ -547,6 +590,11 @@ function guardarFactura() {
     otrosCargos: parseFloat(document.getElementById("otrosCargos").value) || 0,
     metodoFlete: document.getElementById("metodoFlete").value || "proporcional",
     ivaSinILA: document.getElementById("ivaSinILA").checked || false,
+    esFacturaTabaco: document.getElementById("esFacturaTabaco")?.checked || false,
+    montoRetencionTabaco: montoRetencionTabaco,
+    siiNetoDeclarado: siiNetoDeclarado,
+    siiIVADeclarado: siiIVADeclarado,
+    siiTotalDeclarado: siiTotalDeclarado,
     productos: [],
   };
 
@@ -660,25 +708,75 @@ function procesarXMLSII(xmlText) {
   const folio = idDoc?.getElementsByTagName("Folio")[0]?.textContent || "";
   const fecha = idDoc?.getElementsByTagName("FchEmis")[0]?.textContent || "";
   const razonSocial = emisor?.getElementsByTagName("RznSoc")[0]?.textContent || "Empresa no especificada";
+  const mntNetoTotal = parseFloat(idDoc?.getElementsByTagName("MntNeto")[0]?.textContent) || 0;
 
   document.getElementById("numeroFactura").value = folio;
   document.getElementById("nombreEmpresa").value = razonSocial;
   document.getElementById("fechaFactura").value = formatearFechaSII(fecha);
   document.getElementById("nombreFactura").value = `${razonSocial} - Factura N°${folio}`;
 
-  const detalles = xmlDoc.getElementsByTagName("Detalle");
-  if (detalles.length === 0) { alert("No se encontraron productos en el XML."); return; }
+  let esTabaco = false;
+
+  const totalesXML = encabezado.getElementsByTagName("Totales")[0];
+  if (totalesXML) {
+    const tagVal = (tag) => parseFloat(totalesXML.getElementsByTagName(tag)[0]?.textContent) || 0;
+    siiNetoDeclarado = tagVal("MntNeto");
+    siiIVADeclarado = tagVal("MntIVA") || tagVal("IVA");
+    siiTotalDeclarado = tagVal("MntTotal");
+
+    const retencion = totalesXML.getElementsByTagName("Retencion")[0];
+    if (retencion) {
+      const tipoRet = retencion.getElementsByTagName("Tipo")[0]?.textContent || "";
+      const montoRet = parseFloat(retencion.getElementsByTagName("Mnto")[0]?.textContent) || 0;
+      if (/cigarrillo|tabaco/i.test(tipoRet) || montoRet > 0) {
+        esFacturaTabaco = true;
+        montoRetencionTabaco = montoRet;
+        document.getElementById("esFacturaTabaco").checked = true;
+        esTabaco = true;
+      }
+    }
+  }
+
+  if (!esTabaco) {
+    const giroEmis = emisor?.getElementsByTagName("GiroEmis")[0]?.textContent || "";
+    const acteco = emisor?.getElementsByTagName("Acteco")[0]?.textContent || "";
+    if (/tabaco/i.test(giroEmis) || acteco === "4620") {
+      esFacturaTabaco = true;
+      montoRetencionTabaco = Math.round(mntNetoTotal * 0.0154);
+      document.getElementById("esFacturaTabaco").checked = true;
+      console.log("[Tabaco] Detectado vía giro:", giroEmis.trim(), "| Retención calculada:", montoRetencionTabaco);
+    } else {
+      console.log("[Tabaco] No detectado. Giro:", giroEmis.trim(), "Acteco:", acteco);
+    }
+  }
+
+  const detalleNodes = xmlDoc.getElementsByTagName("Detalle");
+  if (detalleNodes.length === 0) { alert("No se encontraron productos en el XML."); return; }
 
   const tbody = document.getElementById("cuerpoTabla");
   tbody.innerHTML = "";
-  for (let i = 0; i < detalles.length; i++) {
-    const det = detalles[i];
-    const nombre = det.getElementsByTagName("NmbItem")[0]?.textContent || "Producto";
-    const qty = parseFloat(det.getElementsByTagName("QtyItem")[0]?.textContent) || 1;
-    const monto = parseFloat(det.getElementsByTagName("MontoItem")[0]?.textContent) || 0;
+
+  const dteWrapper = detalleNodes[0].getElementsByTagName("Dte");
+  const productos = dteWrapper.length > 0 ? dteWrapper : detalleNodes;
+
+  for (let i = 0; i < productos.length; i++) {
+    const item = productos[i];
+    let nombre = item.getElementsByTagName("NmbItem")[0]?.textContent || "Producto";
+
+    const codigo = item.getElementsByTagName("Codigo")[0]?.textContent || "";
+    if (codigo) {
+      const codigoCorto = codigo.length >= 4 ? codigo.slice(-4) : codigo;
+      if (nombre.startsWith(codigoCorto + " ")) {
+        nombre = nombre.substring(codigoCorto.length + 1).trim();
+      }
+    }
+    nombre = nombre.replace(/^\d+\s+/, "").trim();
+
+    const qty = parseFloat(item.getElementsByTagName("QtyItem")[0]?.textContent) || 1;
+    const monto = parseFloat(item.getElementsByTagName("MontoItem")[0]?.textContent) || 0;
 
     let ilaTipo = 0;
-    const impuestos = det.getElementsByTagName("ImptoRet");
+    const impuestos = item.getElementsByTagName("ImptoRet");
     for (let j = 0; j < impuestos.length; j++) {
       const codImp = impuestos[j].getElementsByTagName("CodImp")[0]?.textContent;
       if (codImp === "15" || codImp === "16") ilaTipo = 0.205;
@@ -701,7 +799,7 @@ function procesarXMLSII(xmlText) {
     }
   }
   calcularTodo();
-  alert(`Factura SII #${folio} importada exitosamente con ${detalles.length} producto(s).`);
+  alert(`Factura SII #${folio} importada exitosamente con ${productos.length} producto(s).`);
 }
 
 function importarXMLSII(event) {
@@ -762,6 +860,13 @@ async function importarPDFFactura(event) {
     if (!datos.productos || datos.productos.length === 0) {
       alert("No se pudieron extraer productos del PDF. Revisá que el archivo sea una factura válida.");
       return;
+    }
+
+    if (datos.esTabaco) {
+      esFacturaTabaco = true;
+      montoRetencionTabaco = Math.round(datos.totalNeto * 0.0154);
+      document.getElementById("esFacturaTabaco").checked = true;
+      console.log("[PDF Tabaco] Detectado en PDF. Retención calculada:", montoRetencionTabaco);
     }
 
     const xmlStr = generarXMLdesdePDF(datos);
@@ -838,7 +943,10 @@ function parsearTextoFactura(texto) {
   if (cargoMatch) otrosCargos = parsearNumeroCL(cargoMatch[1]);
 
   const productos = extraerProductosPDF(lineas, textoPlano);
-  return { numeroFactura, nombreEmpresa, fechaFactura, nombreFactura, fleteTotal, otrosCargos, productos };
+  const totalNetoPDF = productos.reduce((s, p) => s + p.netoTotal, 0);
+  const esTabaco = /\b(tabaco|cigarrillo|bat\s*chile|british\s*american|philip\s*morris|pm\s*usa)\b/i.test(textoPlano)
+    || /^BAT\b/i.test(nombreEmpresa);
+  return { numeroFactura, nombreEmpresa, fechaFactura, nombreFactura, fleteTotal, otrosCargos, productos, esTabaco, totalNeto: totalNetoPDF };
 }
 
 function extraerProductosPDF(lineas, textoPlano) {
@@ -928,7 +1036,12 @@ function parsearNumeroCL(str) {
 }
 
 function generarXMLdesdePDF(datos) {
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<DTE xmlns="http://www.sii.cl/SiiDte">\n  <Documento>\n    <Encabezado>\n      <IdDoc>\n        <TipoDTE>33</TipoDTE>\n        <Folio>${escXML(datos.numeroFactura || "0")}</Folio>\n        <FchEmis>${escXML(datos.fechaFactura || "2000-01-01")}</FchEmis>\n      </IdDoc>\n      <Emisor>\n        <RznSoc>${escXML(datos.nombreEmpresa || "Empresa")}</RznSoc>\n      </Emisor>\n    </Encabezado>\n`;
+  const totalNeto = datos.totalNeto || datos.productos.reduce((s, p) => s + p.netoTotal, 0);
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<DTE xmlns="http://www.sii.cl/SiiDte">\n  <Documento>\n    <Encabezado>\n      <IdDoc>\n        <TipoDTE>33</TipoDTE>\n        <Folio>${escXML(datos.numeroFactura || "0")}</Folio>\n        <FchEmis>${escXML(datos.fechaFactura || "2000-01-01")}</FchEmis>\n        <MntNeto>${totalNeto}</MntNeto>\n      </IdDoc>\n      <Emisor>\n        <RznSoc>${escXML(datos.nombreEmpresa || "Empresa")}</RznSoc>`;
+  if (datos.esTabaco) {
+    xml += `\n        <GiroEmis>VENTA AL POR MAYOR DE TABACO</GiroEmis>\n        <Acteco>4620</Acteco>`;
+  }
+  xml += `\n      </Emisor>\n      <Totales>\n        <MntNeto>${totalNeto}</MntNeto>\n        <MntExe>0</MntExe>\n        <TasaIVA>19</TasaIVA>\n        <IVA>${Math.round(totalNeto * 0.19)}</IVA>\n        <MntIVA>${Math.round(totalNeto * 0.19)}</MntIVA>\n        <MntTotal>${Math.round(totalNeto * 1.19)}</MntTotal>\n      </Totales>\n    </Encabezado>\n`;
   datos.productos.forEach(p => {
     xml += `    <Detalle>\n      <NmbItem>${escXML(p.nombre)}</NmbItem>\n      <QtyItem>${p.cantidad}</QtyItem>\n      <MontoItem>${p.netoTotal}</MontoItem>\n`;
     if (p.ilaTipo === 0.205) {
@@ -970,7 +1083,7 @@ function analizarProductosPesados() {
 
     const tieneDecimales = cant !== Math.floor(cant);
     const keywordMatch = PESO_PATTERNS.some(p => p.test(nombre));
-    const esPesado = tieneDecimales || keywordMatch;
+    const esPesado = esFacturaTabaco ? false : (tieneDecimales || keywordMatch);
 
     const item = { codigo, descripcion: nombre, cantidad: cant, valor_total: neto };
 
@@ -1058,6 +1171,12 @@ function editarFactura(index) {
   document.getElementById("otrosCargos").value = factura.otrosCargos;
   if (factura.metodoFlete) document.getElementById("metodoFlete").value = factura.metodoFlete;
   document.getElementById("ivaSinILA").checked = !!factura.ivaSinILA;
+  esFacturaTabaco = factura.esFacturaTabaco || false;
+  montoRetencionTabaco = factura.montoRetencionTabaco || 0;
+  siiNetoDeclarado = factura.siiNetoDeclarado || 0;
+  siiIVADeclarado = factura.siiIVADeclarado || 0;
+  siiTotalDeclarado = factura.siiTotalDeclarado || 0;
+  document.getElementById("esFacturaTabaco").checked = esFacturaTabaco;
 
   // Limpiar la tabla de productos
   const tbody = document.getElementById("cuerpoTabla");

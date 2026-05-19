@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Factura POS Chile </title>
+    <title>Calculadora de Factura POS Chile</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -83,6 +84,13 @@
                             <span class="text-gray-700">IVA sin ILA</span>
                             <span class="text-xs text-gray-400 ml-2">(ILA se factura separado del IVA)</span>
                         </label>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <label class="inline-flex items-center cursor-pointer text-sm">
+                            <input type="checkbox" id="esFacturaTabaco" class="mr-2 rounded border-gray-300 text-amber-600 focus:ring-amber-500" onchange="calcularTodo()">
+                            <span class="text-gray-700 font-semibold text-amber-700">Factura de Tabaco (Cambio de Sujeto IVA)</span>
+                        </label>
+                        <p class="text-xs text-amber-600 mt-1 ml-6 hidden" id="notaTabaco">El ISC (Impuesto Selectivo al Tabaco) ya está incluido en el precio neto unitario. Las cantidades fraccionadas (ej. 0.6) representan cajas parciales, no kilos.</p>
                     </div>
                 </div>
 
@@ -226,10 +234,18 @@
                             <span>Total IVA (19%):</span>
                             <span id="resIVA" class="font-semibold">$0</span>
                         </div>
+
+                        <div class="flex justify-between text-amber-700 pt-2 border-t border-gray-100 hidden" id="filaRetencionResumen">
+                            <span>IVA Retenido C.Sujeto (Cigarrillos):</span>
+                            <span id="resRetencion" class="font-semibold">$0</span>
+                        </div>
                         
                         <div class="flex justify-between text-2xl font-bold text-indigo-700 pt-4 border-t-2 border-indigo-50">
                             <span>TOTAL:</span>
                             <span id="resTotal">$0</span>
+                        </div>
+                        <div class="text-right text-[11px] text-gray-400 mt-1 hidden" id="resFormula">
+                            <span id="resFormulaTexto"></span>
                         </div>
                     </div>
                     
@@ -271,6 +287,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=17"></script>
+    <script src="script.js?v=24"></script>
 </body>
 </html>
