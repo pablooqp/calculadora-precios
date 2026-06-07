@@ -52,6 +52,7 @@ function configurarAutocompletado(input, rowId) {
       li.addEventListener('mousedown', function (e) {
         e.preventDefault();
         input.value = p.DESCRIPCION;
+        input.dataset.codigo = p.CODIGO || '';
         seleccionado = true;
         lista.style.display = 'none';
         const label = document.getElementById(`det-pventa-programa-${rowId}`);
@@ -601,8 +602,10 @@ function guardarFactura() {
   mainRows.forEach((row) => {
     const id = row.id.split("-").pop();
     const pvpInput = document.getElementById(`det-venta-sugerida-${id}`);
+    const nombreInput = row.querySelector('input[placeholder="Nombre..."]');
     const producto = {
-      nombre: row.querySelector('input[placeholder="Nombre..."]').value,
+      nombre: nombreInput.value,
+      codigo: nombreInput.dataset.codigo || '',
       cantidad: parseFloat(row.querySelector(".cantidad").value) || 0,
       netoTotal: parseFloat(row.querySelector(".neto-total").value) || 0,
       ilaTipo: parseFloat(row.querySelector(".ila-tipo").value) || 0,
@@ -1193,7 +1196,7 @@ function editarFactura(index) {
       const netoTotalInput = lastRow.querySelector(".neto-total");
       const ilaTipoSelect = lastRow.querySelector(".ila-tipo");
       const margenInput = lastRow.querySelector(".margen-producto");
-      if (nombreInput) nombreInput.value = producto.nombre;
+      if (nombreInput) { nombreInput.value = producto.nombre; nombreInput.dataset.codigo = producto.codigo || ''; }
       if (cantidadInput) cantidadInput.value = producto.cantidad;
       if (netoTotalInput) netoTotalInput.value = producto.netoTotal;
       if (ilaTipoSelect) ilaTipoSelect.value = producto.ilaTipo;
