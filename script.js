@@ -7,6 +7,7 @@ let siiNetoDeclarado = 0;
 let siiIVADeclarado = 0;
 let siiTotalDeclarado = 0;
 
+// Carga el catálogo de productos desde un archivo JSON remoto para usar en el autocompletado.
 async function cargarProductos() {
   try {
     const resp = await fetch('https://pub-003150e7951b49dcafdf09e331520cd5.r2.dev/productos.json');
@@ -17,6 +18,7 @@ async function cargarProductos() {
   }
 }
 
+// Configura el autocompletado de productos en un input de fila, mostrando sugerencias desde el catálogo cargado.
 function configurarAutocompletado(input, rowId) {
   const wrapper = document.createElement('div');
   wrapper.className = 'autocomplete-wrapper';
@@ -76,10 +78,12 @@ function configurarAutocompletado(input, rowId) {
   });
 }
 
+// Detecta si el usuario está usando un dispositivo móvil mediante el user agent del navegador.
 function esDispositivoMovil() {
   return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 }
 
+// Agrega una nueva fila de producto a la tabla, con sus respectivas celdas de detalle y controles.
 function agregarFila() {
   const tbody = document.getElementById("cuerpoTabla");
   const rowId = rowCount;
@@ -217,6 +221,7 @@ function agregarFila() {
   calcularTodo();
 }
 
+// Muestra u oculta el panel de detalles expandido de una fila de producto.
 function toggleDetails(id) {
   const container = document.getElementById(`container-details-${id}`);
   const btn = document.getElementById(`btn-toggle-${id}`);
@@ -231,6 +236,7 @@ function toggleDetails(id) {
   }
 }
 
+// Recalcula el margen de un producto a partir del precio de venta público (PVP) ingresado manualmente.
 function calcularDesdePVP(id) {
   const mainRow = document.getElementById(`fila-main-${id}`);
   if (!mainRow) return;
@@ -265,6 +271,7 @@ function calcularDesdePVP(id) {
   calcularTodo(id);
 }
 
+// Elimina una fila de producto de la tabla tras confirmación del usuario.
 function eliminarFila(id) {
   if (confirm("¿Desea eliminar la fila?")) {
     if (document.getElementById(`fila-main-${id}`))
@@ -275,6 +282,7 @@ function eliminarFila(id) {
   }
 }
 
+// Formatea un valor numérico como dinero en pesos chilenos (CLP).
 function formatoDinero(valor) {
   return new Intl.NumberFormat("es-CL", {
     style: "currency",
@@ -282,6 +290,7 @@ function formatoDinero(valor) {
   }).format(Math.round(valor));
 }
 
+// Calcula el costo logístico unitario (flete + otros cargos) según el método seleccionado (proporcional, simple o CCU).
 function calcularLogisticaUnitario(netoUnitario, cant, netoTotalLinea, tasaILA, totales) {
   const metodo = document.getElementById('metodoFlete').value;
   if (metodo === 'ccu') {
@@ -295,12 +304,14 @@ function calcularLogisticaUnitario(netoUnitario, cant, netoTotalLinea, tasaILA, 
   return totalUnidades > 0 ? (totales.fleteTotal + totales.otrosCargos) / totalUnidades : 0;
 }
 
+// Calcula el transporte unitario bajo el método CCU: distribuye el flete total equitativamente por línea.
 function calcularTransporteCCU(netoFleteFactura, numLineas, cantidadUnidades) {
   if (numLineas === 0 || cantidadUnidades === 0) return 0;
   const fletePorLinea = netoFleteFactura / numLineas;
   return parseFloat((fletePorLinea / cantidadUnidades).toFixed(2));
 }
 
+// Calcula el costo de transporte unitario por el método proporcional, distribuyendo el flete según el peso bruto de cada línea.
 function obtenerTransporteUnitario(netoUnitario, tasaILA, totalFactura, sumaBrutosTeoricos, ivaSinILA) {
   const TASA_IVA = 0.19;
   if (sumaBrutosTeoricos === 0) return 0;
@@ -314,6 +325,7 @@ function obtenerTransporteUnitario(netoUnitario, tasaILA, totalFactura, sumaBrut
   return parseFloat(transporteNetoUnitario.toFixed(2));
 }
 
+// Calcula y retorna todos los totales de la factura: netos, ILA (vino/destilado/IABA), IVA, bruto total y suma de brutos teóricos.
 function calcularTotalesFactura() {
   const fleteTotal = parseFloat(document.getElementById("fleteTotal").value) || 0;
   const otrosCargos = parseFloat(document.getElementById("otrosCargos").value) || 0;
@@ -356,6 +368,7 @@ function calcularTotalesFactura() {
   };
 }
 
+// Función maestra de recálculo: actualiza todos los valores unitarios de cada fila, los resúmenes del sidebar de factura, rentabilidad y la fórmula bajo el total.
 function calcularTodo(skipPvpId) {
   const totales = calcularTotalesFactura();
   const { mainRows, granTotalFactura, sumaBrutosTeoricos } = totales;
@@ -539,6 +552,7 @@ function calcularTodo(skipPvpId) {
   }
 }
 
+// Restablece todos los campos del formulario a sus valores por defecto y deja una única fila vacía.
 function limpiar() {
   document.getElementById("fleteTotal").value = 0;
   document.getElementById("otrosCargos").value = 0;
@@ -558,12 +572,14 @@ function limpiar() {
   agregarFila();
 }
 
+// Inicia una nueva factura limpiando el formulario, reiniciando el modo edición y enfocando el campo de nombre.
 function nuevaFactura() {
   facturaEnEdicion = null;
   limpiar();
   document.getElementById("nombreFactura").focus();
 }
 
+// Obtiene los datos generales de la factura (número, empresa, fecha, nombre) desde los campos del formulario.
 function getFacturaDatosGenerales() {
   return {
     numeroFactura: document.getElementById("numeroFactura").value || "",
@@ -573,6 +589,7 @@ function getFacturaDatosGenerales() {
   };
 }
 
+// Rellena los campos del formulario con los datos generales de una factura guardada.
 function setFacturaDatosGenerales(factura) {
   document.getElementById("numeroFactura").value = factura.numeroFactura || "";
   document.getElementById("nombreEmpresa").value = factura.nombreEmpresa || "";
@@ -580,6 +597,7 @@ function setFacturaDatosGenerales(factura) {
   document.getElementById("nombreFactura").value = factura.nombre || "";
 }
 
+// Serializa todos los datos del formulario y los guarda en localStorage, creando una nueva factura o actualizando la existente si está en modo edición.
 function guardarFactura() {
   const tbody = document.getElementById("cuerpoTabla");
   const mainRows = tbody.querySelectorAll('tr[id^="fila-main-"]');
@@ -638,6 +656,7 @@ function guardarFactura() {
   }
 }
 
+// Carga la lista de facturas guardadas en localStorage y las renderiza en el panel lateral.
 function cargarFacturas() {
   const listadoFacturas = document.getElementById("listadoFacturas");
   listadoFacturas.innerHTML = "";
@@ -662,6 +681,7 @@ function cargarFacturas() {
   });
 }
 
+// Elimina una factura guardada de localStorage por su índice en el array.
 function eliminarFactura(index) {
   const facturasGuardadas = JSON.parse(localStorage.getItem("facturas")) || [];
 
@@ -678,6 +698,7 @@ function eliminarFactura(index) {
   cargarFacturas();
 }
 
+// Descarga una factura guardada como archivo JSON para respaldo externo.
 function descargarFactura(index) {
   const facturasGuardadas = JSON.parse(localStorage.getItem("facturas")) || [];
   const factura = facturasGuardadas[index];
@@ -696,6 +717,7 @@ function descargarFactura(index) {
   URL.revokeObjectURL(url);
 }
 
+// Procesa un XML de factura SII (DTE), extrayendo datos generales, productos, impuestos y detectando facturas de tabaco con retención de IVA.
 function procesarXMLSII(xmlText) {
   const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
   if (xmlDoc.querySelector("parsererror")) {
@@ -805,6 +827,7 @@ function procesarXMLSII(xmlText) {
   alert(`Factura SII #${folio} importada exitosamente con ${productos.length} producto(s).`);
 }
 
+// Maneja la importación de un archivo XML SII desde el input de archivo y lo pasa al procesador.
 function importarXMLSII(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -814,6 +837,7 @@ function importarXMLSII(event) {
   event.target.value = "";
 }
 
+// Convierte una fecha en formato SII (DD-MM-YYYY) a formato ISO (YYYY-MM-DD).
 function formatearFechaSII(fechaStr) {
   if (!fechaStr) return "";
   const parts = fechaStr.split("-");
@@ -823,6 +847,8 @@ function formatearFechaSII(fechaStr) {
 }
 
 let pdfjsLib = null;
+
+// Carga dinámicamente la librería PDF.js desde CDN para la extracción de texto de PDFs.
 async function cargarPDFjs() {
   if (pdfjsLib) return pdfjsLib;
   return new Promise((resolve, reject) => {
@@ -838,6 +864,7 @@ async function cargarPDFjs() {
   });
 }
 
+// Importa una factura desde un archivo PDF: extrae texto con PDF.js, parsea productos y los carga en el formulario vía XML SII simulado.
 async function importarPDFFactura(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -886,6 +913,7 @@ async function importarPDFFactura(event) {
 
 const MESES_ES = {enero:"01",febrero:"02",marzo:"03",abril:"04",mayo:"05",junio:"06",julio:"07",agosto:"08",septiembre:"09",octubre:"10",noviembre:"11",diciembre:"12"};
 
+// Parsea el texto extraído de un PDF de factura para obtener datos generales (RUT, folio, fecha, empresa), flete y productos.
 function parsearTextoFactura(texto) {
   const lineas = texto.split("\n").map(l => l.trim()).filter(l => l);
   const textoPlano = lineas.join(" ");
@@ -952,6 +980,7 @@ function parsearTextoFactura(texto) {
   return { numeroFactura, nombreEmpresa, fechaFactura, nombreFactura, fleteTotal, otrosCargos, productos, esTabaco, totalNeto: totalNetoPDF };
 }
 
+// Extrae los productos desde las líneas de texto de un PDF, detectando cantidades, netos e impuestos (ILA/IABA) con múltiples formatos.
 function extraerProductosPDF(lineas, textoPlano) {
   const productos = [];
   const numPatt = /[\d.,]+/g;
@@ -1030,6 +1059,7 @@ function extraerProductosPDF(lineas, textoPlano) {
   return productos;
 }
 
+// Convierte una cadena con formato numérico chileno (punto como separador de miles, coma decimal) a número flotante.
 function parsearNumeroCL(str) {
   if (!str) return 0;
   let s = String(str).trim();
@@ -1038,6 +1068,7 @@ function parsearNumeroCL(str) {
   return isNaN(n) ? 0 : n;
 }
 
+// Genera un XML con formato SII DTE a partir de los datos extraídos de un PDF para su procesamiento unificado con procesarXMLSII.
 function generarXMLdesdePDF(datos) {
   const totalNeto = datos.totalNeto || datos.productos.reduce((s, p) => s + p.netoTotal, 0);
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<DTE xmlns="http://www.sii.cl/SiiDte">\n  <Documento>\n    <Encabezado>\n      <IdDoc>\n        <TipoDTE>33</TipoDTE>\n        <Folio>${escXML(datos.numeroFactura || "0")}</Folio>\n        <FchEmis>${escXML(datos.fechaFactura || "2000-01-01")}</FchEmis>\n        <MntNeto>${totalNeto}</MntNeto>\n      </IdDoc>\n      <Emisor>\n        <RznSoc>${escXML(datos.nombreEmpresa || "Empresa")}</RznSoc>`;
@@ -1061,12 +1092,14 @@ function generarXMLdesdePDF(datos) {
   return xml;
 }
 
+// Escapa caracteres especiales (&, <, >, ") para su inclusión segura en XML.
 function escXML(str) {
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 const PESO_PATTERNS = [/kilo/i, /kg\b/i, /granel/i, /\bgrs?\b/i, /gramos/i, /deshuesad/i, /entero/i, /pechuga/i, /trutro/i, /lomo/i, /posta/i, /asado/i, /sobrecostilla/i, /\d+grs?\b/i, /chorizo/i, /mani/i];
 
+// Analiza los productos de la tabla clasificándolos como pesados (kilos) o unitarios según decimales en cantidad y palabras clave.
 function analizarProductosPesados() {
   const tbody = document.getElementById("cuerpoTabla");
   const mainRows = tbody.querySelectorAll('tr[id^="fila-main-"]');
@@ -1129,6 +1162,7 @@ function analizarProductosPesados() {
   alert(msg.join("\n"));
 }
 
+// Importa una factura desde un archivo JSON previamente descargado, pidiendo datos faltantes si es necesario.
 function importarFactura(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1159,6 +1193,7 @@ function importarFactura(event) {
   event.target.value = "";
 }
 
+// Carga una factura guardada en el formulario para su edición, restaurando datos generales, productos, PVP y configuración de tabaco.
 function editarFactura(index) {
   const facturasGuardadas = JSON.parse(localStorage.getItem("facturas")) || [];
   const factura = facturasGuardadas[index];
